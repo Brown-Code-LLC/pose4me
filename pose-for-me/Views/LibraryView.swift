@@ -23,7 +23,7 @@ struct LibraryView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Library")
-                    .font(.largeTitle.bold())
+                    .font(.appLargeTitle)
                     .foregroundStyle(Theme.textPrimary)
                     .padding(.top, 8)
 
@@ -62,12 +62,12 @@ struct LibraryView: View {
             Haptics.tap()
         } label: {
             Label(label, systemImage: symbol)
-                .font(.footnote.weight(.medium))
-                .foregroundStyle(isOn ? Color.black.opacity(0.8) : Theme.textPrimary)
+                .font(.body(13, .medium))
+                .foregroundStyle(isOn ? .white : Theme.textPrimary)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
                 .background(
-                    Capsule().fill(isOn ? AnyShapeStyle(Theme.auroraGradient)
+                    Capsule().fill(isOn ? AnyShapeStyle(Theme.brandGradient)
                                         : AnyShapeStyle(Theme.card))
                 )
         }
@@ -91,33 +91,33 @@ struct LibraryView: View {
                         .opacity(locked ? 0.4 : 1)
                     if locked {
                         Image(systemName: "lock.fill")
-                            .font(.caption)
+                            .font(.appCaption)
                             .foregroundStyle(Theme.warning)
                             .padding(7)
                             .background(.ultraThinMaterial, in: Circle())
                     }
                 }
                 Text(exercise.name)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.body(15, .semibold))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
                 HStack(spacing: 6) {
                     Text(exercise.difficulty.label)
-                        .font(.caption2)
+                        .font(.appCaption2)
                         .foregroundStyle(Theme.textSecondary)
                     if exercise.seatedFriendly {
                         Image(systemName: "chair")
-                            .font(.caption2)
+                            .font(.appCaption2)
                             .foregroundStyle(Theme.textTertiary)
                     }
                     if exercise.tracking == .camera {
                         Image(systemName: "camera.viewfinder")
-                            .font(.caption2)
-                            .foregroundStyle(Theme.aurora1)
+                            .font(.appCaption2)
+                            .foregroundStyle(Theme.accent)
                     }
                     Spacer()
                     Text("\(Int(exercise.totalSeconds))s")
-                        .font(.caption2.monospacedDigit())
+                        .font(.appCaption2.monospacedDigit())
                         .foregroundStyle(Theme.textTertiary)
                 }
             }

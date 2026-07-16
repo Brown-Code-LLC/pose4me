@@ -27,7 +27,6 @@ struct PaywallView: View {
                 .padding(.bottom, 30)
             }
         }
-        .preferredColorScheme(.dark)
         .onAppear {
             withAnimation(.spring(response: 0.7, dampingFraction: 0.75)) {
                 appeared = true
@@ -43,7 +42,7 @@ struct PaywallView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.subheadline.bold())
+                        .font(.body(15, .bold))
                         .foregroundStyle(Theme.textSecondary)
                         .padding(10)
                         .background(.ultraThinMaterial, in: Circle())
@@ -56,10 +55,10 @@ struct PaywallView: View {
                 .opacity(appeared ? 1 : 0)
 
             Text("Pose4Me Pro")
-                .font(.system(size: 34, weight: .black, design: .rounded))
-                .foregroundStyle(Theme.auroraGradient)
+                .font(.display(32, .heavy))
+                .foregroundStyle(Theme.brandGradient)
             Text("Your body works all day. Give it a coach.")
-                .font(.subheadline)
+                .font(.appSubheadline)
                 .foregroundStyle(Theme.textSecondary)
         }
     }
@@ -82,14 +81,14 @@ struct PaywallView: View {
         HStack(spacing: 14) {
             Image(systemName: symbol)
                 .font(.title3)
-                .foregroundStyle(Theme.auroraGradient)
+                .foregroundStyle(Theme.brandGradient)
                 .frame(width: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.body(15, .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 Text(detail)
-                    .font(.caption)
+                    .font(.appCaption)
                     .foregroundStyle(Theme.textSecondary)
             }
         }
@@ -117,20 +116,20 @@ struct PaywallView: View {
             VStack(spacing: 6) {
                 if let badge {
                     Text(badge)
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundStyle(Color.black.opacity(0.8))
+                        .font(.body(10, .bold))
+                        .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
                         .background(Theme.warning, in: Capsule())
                 }
                 Text(title)
-                    .font(.headline)
+                    .font(.appHeadline)
                     .foregroundStyle(Theme.textPrimary)
                 Text(price)
-                    .font(.title3.bold())
+                    .font(.appTitle3)
                     .foregroundStyle(Theme.textPrimary)
                 Text(sub)
-                    .font(.caption2)
+                    .font(.appCaption2)
                     .foregroundStyle(Theme.textSecondary)
             }
             .frame(maxWidth: .infinity)
@@ -140,7 +139,7 @@ struct PaywallView: View {
                     .fill(Theme.card)
                     .overlay(
                         RoundedRectangle(cornerRadius: 18)
-                            .strokeBorder(isSelected ? AnyShapeStyle(Theme.auroraGradient)
+                            .strokeBorder(isSelected ? AnyShapeStyle(Theme.brandGradient)
                                                      : AnyShapeStyle(Theme.cardStroke),
                                           lineWidth: isSelected ? 2 : 1)
                     )
@@ -177,12 +176,12 @@ struct PaywallView: View {
             Button("Restore purchases") {
                 Task { await entitlements.restorePurchases() }
             }
-            .font(.footnote)
+            .font(.appFootnote)
             .foregroundStyle(Theme.textSecondary)
 
             if entitlements.products.isEmpty {
                 Text("Store products not configured yet — the button above uses a local developer unlock.")
-                    .font(.caption2)
+                    .font(.appCaption2)
                     .foregroundStyle(Theme.textTertiary)
                     .multilineTextAlignment(.center)
             }

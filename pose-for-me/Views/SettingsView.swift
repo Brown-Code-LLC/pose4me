@@ -14,7 +14,7 @@ struct SettingsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Settings")
-                    .font(.largeTitle.bold())
+                    .font(.appLargeTitle)
                     .foregroundStyle(Theme.textPrimary)
                     .padding(.top, 8)
 
@@ -28,7 +28,9 @@ struct SettingsView: View {
             .padding(.bottom, 24)
         }
         .onChange(of: settings.data) {
-            Task { await scheduler.reschedule(settings: settings.data) }
+            // refresh() rebuilds only when reminder-relevant settings changed;
+            // toggling haptics or session length won't reset the countdown.
+            Task { await scheduler.refresh(settings: settings.data) }
         }
     }
 
@@ -41,7 +43,7 @@ struct SettingsView: View {
             Toggle(isOn: $settings.data.remindersEnabled) {
                 settingLabel("Stretch reminders", detail: "Nudge me to move")
             }
-            .tint(Theme.aurora2)
+            .tint(Theme.accent)
 
             if settings.data.remindersEnabled {
                 VStack(alignment: .leading, spacing: 6) {
@@ -54,21 +56,33 @@ struct SettingsView: View {
                         ),
                         in: 30...240, step: 15
                     )
-                    .tint(Theme.aurora2)
+                    .tint(Theme.accent)
                 }
 
-                HStack {
-                    settingLabel("Active hours", detail: "No pings outside these")
-                    Spacer()
-                    Picker("", selection: $settings.data.activeStartHour) {
-                        ForEach(0..<24, id: \.self) { Text(hourLabel($0)).tag($0) }
+                VStack(alignment: .leading, spacing: 6) {
+                    settingLabel("Active hours",
+                                 detail: "Set any window your shift needs — day, overnight, any start minute")
+                    HStack(spacing: 10) {
+                        DatePicker("", selection: timeBinding(hour: $settings.data.activeStartHour,
+                                                              minute: $settings.data.activeStartMinute),
+                                   displayedComponents: .hourAndMinute)
+                            .labelsHidden()
+                        Text("to").foregroundStyle(Theme.textTertiary)
+                        DatePicker("", selection: timeBinding(hour: $settings.data.activeEndHour,
+                                                              minute: $settings.data.activeEndMinute),
+                                   displayedComponents: .hourAndMinute)
+                            .labelsHidden()
+                        Spacer()
                     }
-                    .tint(Theme.aurora1)
-                    Text("–").foregroundStyle(Theme.textTertiary)
-                    Picker("", selection: $settings.data.activeEndHour) {
-                        ForEach(1..<25, id: \.self) { Text(hourLabel($0 % 24)).tag($0 % 24) }
+                    if settings.data.activeStartMinutesFromMidnight > settings.data.activeEndMinutesFromMidnight {
+                        Text("🌙 Overnight window: \(windowTimeLabel(settings.data.activeStartHour, settings.data.activeStartMinute)) through \(windowTimeLabel(settings.data.activeEndHour, settings.data.activeEndMinute)) the next morning — active days refer to the night the shift starts.")
+                            .font(.appCaption2)
+                            .foregroundStyle(Theme.accent)
+                    } else if settings.data.activeStartMinutesFromMidnight == settings.data.activeEndMinutesFromMidnight {
+                        Text("Around-the-clock: reminders all day on active days.")
+                            .font(.appCaption2)
+                            .foregroundStyle(Theme.accent)
                     }
-                    .tint(Theme.aurora1)
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -82,14 +96,14 @@ struct SettingsView: View {
                                 Haptics.tap()
                             } label: {
                                 Text(weekdaySymbols[weekday - 1])
-                                    .font(.caption.bold())
+                                    .font(.body(12, .bold))
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 9)
                                     .background(
-                                        Circle().fill(isOn ? AnyShapeStyle(Theme.auroraGradient)
-                                                           : AnyShapeStyle(Color.white.opacity(0.08)))
+                                        Circle().fill(isOn ? AnyShapeStyle(Theme.brandGradient)
+                                                           : AnyShapeStyle(Theme.tintFill))
                                     )
-                                    .foregroundStyle(isOn ? Color.black.opacity(0.8) : Theme.textSecondary)
+                                    .foregroundStyle(isOn ? .white : Theme.textSecondary)
                             }
                         }
                     }
@@ -121,6 +135,17 @@ struct SettingsView: View {
             }
 
             VStack(alignment: .leading, spacing: 8) {
+                settingLabel("Movement demo", detail: "Animated preview of the full motion before each stretch, then auto-start")
+                Picker("Movement demo", selection: $settings.data.previewSeconds) {
+                    Text("Off").tag(0)
+                    Text("10s").tag(10)
+                    Text("15s").tag(15)
+                    Text("30s").tag(30)
+                }
+                .pickerStyle(.segmented)
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
                 settingLabel("Max difficulty", detail: nil)
                 Picker("Max difficulty", selection: $settings.data.maxDifficulty) {
                     ForEach(Difficulty.allCases, id: \.rawValue) { d in
@@ -133,7 +158,7 @@ struct SettingsView: View {
             Toggle(isOn: $settings.data.seatedFriendlyOnly) {
                 settingLabel("Seated-friendly only", detail: "Great for desk setups")
             }
-            .tint(Theme.aurora2)
+            .tint(Theme.accent)
 
             VStack(alignment: .leading, spacing: 8) {
                 settingLabel("Categories", detail: "Which stretches get suggested")
@@ -147,15 +172,15 @@ struct SettingsView: View {
                             Haptics.tap()
                         } label: {
                             Label(category.rawValue, systemImage: category.symbol)
-                                .font(.caption.weight(.medium))
+                                .font(.body(12, .medium))
                                 .lineLimit(1)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 9)
                                 .background(
-                                    Capsule().fill(isOn ? AnyShapeStyle(Theme.auroraGradient)
-                                                        : AnyShapeStyle(Color.white.opacity(0.08)))
+                                    Capsule().fill(isOn ? AnyShapeStyle(Theme.brandGradient)
+                                                        : AnyShapeStyle(Theme.tintFill))
                                 )
-                                .foregroundStyle(isOn ? Color.black.opacity(0.8) : Theme.textSecondary)
+                                .foregroundStyle(isOn ? .white : Theme.textSecondary)
                         }
                     }
                 }
@@ -174,14 +199,14 @@ struct SettingsView: View {
                 settingLabel("Camera tracking",
                              detail: "Front camera verifies your pose. All on-device.")
             }
-            .tint(Theme.aurora2)
+            .tint(Theme.accent)
 
             if settings.data.cameraTrackingEnabled {
                 VStack(alignment: .leading, spacing: 6) {
                     settingLabel("Form strictness: \(strictnessLabel)",
                                  detail: "How precisely you must match the guide")
                     Slider(value: $settings.data.matchStrictness, in: 0...1)
-                        .tint(Theme.aurora2)
+                        .tint(Theme.accent)
                 }
             }
 
@@ -189,14 +214,14 @@ struct SettingsView: View {
                 settingLabel("Model", detail: "Estimation backend in use")
                 Spacer()
                 Text(PoseEstimatorFactory.bestBackendName)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Theme.aurora1)
+                    .font(.body(12, .semibold))
+                    .foregroundStyle(Theme.accent)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .background(Color.white.opacity(0.08), in: Capsule())
+                    .background(Theme.tintFill, in: Capsule())
             }
             Text("Drop yolo26n-pose.mlpackage into the project (see tools/export_yolo26_pose.py) to switch from Apple Vision to YOLO26.")
-                .font(.caption2)
+                .font(.appCaption2)
                 .foregroundStyle(Theme.textTertiary)
         }
         .card()
@@ -207,10 +232,21 @@ struct SettingsView: View {
     private var feelCard: some View {
         VStack(alignment: .leading, spacing: 14) {
             sectionHeader("Feel", symbol: "hand.tap.fill")
+
+            VStack(alignment: .leading, spacing: 8) {
+                settingLabel("Appearance", detail: "Light and dark themes, or follow iOS")
+                Picker("Appearance", selection: $settings.data.appearance) {
+                    Text("System").tag("system")
+                    Text("Light").tag("light")
+                    Text("Dark").tag("dark")
+                }
+                .pickerStyle(.segmented)
+            }
+
             Toggle(isOn: $settings.data.hapticsEnabled) {
                 settingLabel("Haptics", detail: nil)
             }
-            .tint(Theme.aurora2)
+            .tint(Theme.accent)
         }
         .card()
     }
@@ -220,7 +256,7 @@ struct SettingsView: View {
             sectionHeader("Pose4Me Pro", symbol: "sparkles")
             if entitlements.isPro {
                 Label("Pro active — thanks for supporting Pose4Me!", systemImage: "checkmark.seal.fill")
-                    .font(.subheadline)
+                    .font(.appSubheadline)
                     .foregroundStyle(Theme.success)
             } else {
                 Button("Upgrade to Pro") { showPaywall = true }
@@ -243,18 +279,18 @@ struct SettingsView: View {
 
     private func sectionHeader(_ title: String, symbol: String) -> some View {
         Label(title, systemImage: symbol)
-            .font(.headline)
+            .font(.appHeadline)
             .foregroundStyle(Theme.textPrimary)
     }
 
     private func settingLabel(_ title: String, detail: String?) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(title)
-                .font(.subheadline.weight(.medium))
+                .font(.body(15, .medium))
                 .foregroundStyle(Theme.textPrimary)
             if let detail {
                 Text(detail)
-                    .font(.caption2)
+                    .font(.appCaption2)
                     .foregroundStyle(Theme.textTertiary)
             }
         }
@@ -275,8 +311,29 @@ struct SettingsView: View {
     }
 
     private func hourLabel(_ hour: Int) -> String {
-        var comps = DateComponents(); comps.hour = hour
+        windowTimeLabel(hour, 0)
+    }
+
+    private func windowTimeLabel(_ hour: Int, _ minute: Int) -> String {
+        var comps = DateComponents(); comps.hour = hour; comps.minute = minute
         let date = Calendar.current.date(from: comps) ?? Date()
         return date.formatted(date: .omitted, time: .shortened)
+    }
+
+    /// Bridges an hour+minute pair to the Date a DatePicker needs.
+    private func timeBinding(hour: Binding<Int>, minute: Binding<Int>) -> Binding<Date> {
+        Binding<Date>(
+            get: {
+                var comps = DateComponents()
+                comps.hour = hour.wrappedValue
+                comps.minute = minute.wrappedValue
+                return Calendar.current.date(from: comps) ?? Date()
+            },
+            set: { date in
+                let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
+                hour.wrappedValue = comps.hour ?? 0
+                minute.wrappedValue = comps.minute ?? 0
+            }
+        )
     }
 }

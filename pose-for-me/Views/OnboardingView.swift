@@ -32,7 +32,7 @@ struct OnboardingView: View {
                 HStack(spacing: 8) {
                     ForEach(0..<3, id: \.self) { i in
                         Capsule()
-                            .fill(i == page ? Theme.aurora1 : Color.white.opacity(0.25))
+                            .fill(i == page ? Theme.accent : Theme.track)
                             .frame(width: i == page ? 24 : 8, height: 8)
                             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: page)
                     }
@@ -51,7 +51,6 @@ struct OnboardingView: View {
                 .padding(.bottom, 28)
             }
         }
-        .preferredColorScheme(.dark)
         .task {
             // Cycle the hero figure through demo poses.
             while !Task.isCancelled {
@@ -68,11 +67,11 @@ struct OnboardingView: View {
                 .frame(width: 190, height: 250)
 
             Text("Pose4Me")
-                .font(.system(size: 40, weight: .black, design: .rounded))
-                .foregroundStyle(Theme.auroraGradient)
+                .font(.display(38, .heavy))
+                .foregroundStyle(Theme.brandGradient)
 
             Text("Sitting is the new smoking.\nWe'll interrupt it — one 60-second stretch at a time.")
-                .font(.body)
+                .font(.appBody)
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 36)
@@ -85,14 +84,14 @@ struct OnboardingView: View {
             Spacer()
             Image(systemName: "bell.and.waves.left.and.right.fill")
                 .font(.system(size: 60))
-                .foregroundStyle(Theme.auroraGradient)
+                .foregroundStyle(Theme.brandGradient)
 
             Text("Pick your rhythm")
-                .font(.title.bold())
+                .font(.appTitle)
                 .foregroundStyle(Theme.textPrimary)
 
             Text("How often should we get you moving?\nYou can fine-tune everything later.")
-                .font(.subheadline)
+                .font(.appSubheadline)
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
 
@@ -115,16 +114,16 @@ struct OnboardingView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.headline)
+                        .font(.appHeadline)
                         .foregroundStyle(Theme.textPrimary)
                     Text(detail)
-                        .font(.caption)
+                        .font(.appCaption)
                         .foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
-                    .foregroundStyle(isOn ? Theme.aurora1 : Theme.textTertiary)
+                    .foregroundStyle(isOn ? Theme.accent : Theme.textTertiary)
             }
             .padding(14)
             .background(
@@ -132,7 +131,7 @@ struct OnboardingView: View {
                     .fill(Theme.card)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .strokeBorder(isOn ? AnyShapeStyle(Theme.auroraGradient)
+                            .strokeBorder(isOn ? AnyShapeStyle(Theme.brandGradient)
                                                : AnyShapeStyle(Theme.cardStroke),
                                           lineWidth: isOn ? 2 : 1)
                     )
@@ -146,10 +145,10 @@ struct OnboardingView: View {
             Spacer()
             Image(systemName: "camera.viewfinder")
                 .font(.system(size: 60))
-                .foregroundStyle(Theme.auroraGradient)
+                .foregroundStyle(Theme.brandGradient)
 
             Text("Your camera is your coach")
-                .font(.title.bold())
+                .font(.appTitle)
                 .foregroundStyle(Theme.textPrimary)
                 .multilineTextAlignment(.center)
 
@@ -169,14 +168,14 @@ struct OnboardingView: View {
         HStack(spacing: 14) {
             Image(systemName: symbol)
                 .font(.title3)
-                .foregroundStyle(Theme.aurora2)
+                .foregroundStyle(Theme.accent)
                 .frame(width: 32)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.body(15, .semibold))
                     .foregroundStyle(Theme.textPrimary)
                 Text(detail)
-                    .font(.caption)
+                    .font(.appCaption)
                     .foregroundStyle(Theme.textSecondary)
             }
         }

@@ -12,7 +12,7 @@ struct StatsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Progress")
-                    .font(.largeTitle.bold())
+                    .font(.appLargeTitle)
                     .foregroundStyle(Theme.textPrimary)
                     .padding(.top, 8)
 
@@ -36,9 +36,9 @@ struct StatsView: View {
             bigStat(value: "\(sessionStore.streakDays)", label: "day streak",
                     symbol: "flame.fill", color: Theme.ember)
             bigStat(value: "\(sessionStore.records.count)", label: "total stretches",
-                    symbol: "figure.flexibility", color: Theme.aurora1)
+                    symbol: "figure.flexibility", color: Theme.accent)
             bigStat(value: String(format: "%.0f", sessionStore.records.reduce(0) { $0 + $1.durationSeconds } / 60),
-                    label: "total minutes", symbol: "clock.fill", color: Theme.aurora3)
+                    label: "total minutes", symbol: "clock.fill", color: Theme.mintSoft)
         }
     }
 
@@ -47,10 +47,10 @@ struct StatsView: View {
             Image(systemName: symbol)
                 .foregroundStyle(color)
             Text(value)
-                .font(.title2.bold())
+                .font(.appTitle2)
                 .foregroundStyle(Theme.textPrimary)
             Text(label)
-                .font(.caption2)
+                .font(.appCaption2)
                 .foregroundStyle(Theme.textTertiary)
                 .multilineTextAlignment(.center)
         }
@@ -61,7 +61,7 @@ struct StatsView: View {
     private var chartCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Last 14 days")
-                .font(.headline)
+                .font(.appHeadline)
                 .foregroundStyle(Theme.textPrimary)
 
             let data = sessionStore.dailyCounts(days: 14)
@@ -70,7 +70,7 @@ struct StatsView: View {
                     x: .value("Day", item.day, unit: .day),
                     y: .value("Stretches", item.count)
                 )
-                .foregroundStyle(Theme.auroraGradient)
+                .foregroundStyle(Theme.brandGradient)
                 .cornerRadius(4)
             }
             .chartXAxis {
@@ -81,7 +81,7 @@ struct StatsView: View {
             }
             .chartYAxis {
                 AxisMarks { _ in
-                    AxisGridLine().foregroundStyle(Color.white.opacity(0.08))
+                    AxisGridLine().foregroundStyle(Theme.tintFill)
                     AxisValueLabel().foregroundStyle(Theme.textTertiary)
                 }
             }
@@ -97,10 +97,10 @@ struct StatsView: View {
                     .foregroundStyle(Theme.warning)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Unlock full history & form scores")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.body(15, .semibold))
                         .foregroundStyle(Theme.textPrimary)
                     Text("Pro keeps every session and tracks your form over time.")
-                        .font(.caption)
+                        .font(.appCaption)
                         .foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
@@ -115,7 +115,7 @@ struct StatsView: View {
     private var recentList: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Recent sessions")
-                .font(.headline)
+                .font(.appHeadline)
                 .foregroundStyle(Theme.textPrimary)
 
             let visible = entitlements.isPro
@@ -124,7 +124,7 @@ struct StatsView: View {
 
             if visible.isEmpty {
                 Text("No sessions yet — your first stretch is one tap away.")
-                    .font(.subheadline)
+                    .font(.appSubheadline)
                     .foregroundStyle(Theme.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
@@ -133,24 +133,24 @@ struct StatsView: View {
             ForEach(visible) { record in
                 HStack {
                     Image(systemName: record.exercise?.category.symbol ?? "figure.stand")
-                        .foregroundStyle(Theme.aurora2)
+                        .foregroundStyle(Theme.accent)
                         .frame(width: 30)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(record.exercise?.name ?? record.exerciseID)
-                            .font(.subheadline.weight(.medium))
+                            .font(.body(15, .medium))
                             .foregroundStyle(Theme.textPrimary)
                         Text(record.date.formatted(date: .abbreviated, time: .shortened))
-                            .font(.caption2)
+                            .font(.appCaption2)
                             .foregroundStyle(Theme.textTertiary)
                     }
                     Spacer()
                     if let score = record.averageMatchScore {
                         Text("\(Int(score * 100))%")
-                            .font(.caption.bold().monospacedDigit())
+                            .font(.body(12, .bold).monospacedDigit())
                             .foregroundStyle(score > 0.6 ? Theme.success : Theme.warning)
                     }
                     Text("\(Int(record.durationSeconds))s")
-                        .font(.caption.monospacedDigit())
+                        .font(.appCaption.monospacedDigit())
                         .foregroundStyle(Theme.textSecondary)
                 }
                 .padding(.vertical, 6)
