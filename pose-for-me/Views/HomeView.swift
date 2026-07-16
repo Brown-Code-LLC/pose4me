@@ -120,6 +120,7 @@ struct HomeView: View {
                 Label("Stretch now", systemImage: "figure.flexibility")
             }
             .buttonStyle(PrimaryButtonStyle())
+            .accessibilityIdentifier("home.stretchNow")
         }
         .frame(maxWidth: .infinity)
         .card(padding: 24)

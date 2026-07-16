@@ -6,8 +6,27 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		7E57AB1E00000000000000AB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21324636300880E4003B1979 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2132463D300880E4003B1979;
+			remoteInfo = "pose-for-me";
+		};
+		7E57AB1E00000000000000BB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 21324636300880E4003B1979 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 2132463D300880E4003B1979;
+			remoteInfo = "pose-for-me";
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		2132463E300880E4003B1979 /* pose-for-me.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "pose-for-me.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E57AB1E00000000000000A3 /* pose-for-meTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "pose-for-meTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E57AB1E00000000000000B3 /* pose-for-meUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "pose-for-meUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +35,34 @@
 			path = "pose-for-me";
 			sourceTree = "<group>";
 		};
+		7E57AB1E00000000000000A1 /* pose-for-meTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "pose-for-meTests";
+			sourceTree = "<group>";
+		};
+		7E57AB1E00000000000000B1 /* pose-for-meUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "pose-for-meUITests";
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		2132463B300880E4003B1979 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E57AB1E00000000000000A5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E57AB1E00000000000000B5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +76,8 @@
 			isa = PBXGroup;
 			children = (
 				21324640300880E4003B1979 /* pose-for-me */,
+				7E57AB1E00000000000000A1 /* pose-for-meTests */,
+				7E57AB1E00000000000000B1 /* pose-for-meUITests */,
 				2132463F300880E4003B1979 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +86,8 @@
 			isa = PBXGroup;
 			children = (
 				2132463E300880E4003B1979 /* pose-for-me.app */,
+				7E57AB1E00000000000000A3 /* pose-for-meTests.xctest */,
+				7E57AB1E00000000000000B3 /* pose-for-meUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +117,52 @@
 			productReference = 2132463E300880E4003B1979 /* pose-for-me.app */;
 			productType = "com.apple.product-type.application";
 		};
+		7E57AB1E00000000000000A2 /* pose-for-meTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E57AB1E00000000000000A7 /* Build configuration list for PBXNativeTarget "pose-for-meTests" */;
+			buildPhases = (
+				7E57AB1E00000000000000A4 /* Sources */,
+				7E57AB1E00000000000000A5 /* Frameworks */,
+				7E57AB1E00000000000000A6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7E57AB1E00000000000000AA /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7E57AB1E00000000000000A1 /* pose-for-meTests */,
+			);
+			name = "pose-for-meTests";
+			packageProductDependencies = (
+			);
+			productName = "pose-for-meTests";
+			productReference = 7E57AB1E00000000000000A3 /* pose-for-meTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		7E57AB1E00000000000000B2 /* pose-for-meUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E57AB1E00000000000000B7 /* Build configuration list for PBXNativeTarget "pose-for-meUITests" */;
+			buildPhases = (
+				7E57AB1E00000000000000B4 /* Sources */,
+				7E57AB1E00000000000000B5 /* Frameworks */,
+				7E57AB1E00000000000000B6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7E57AB1E00000000000000BA /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7E57AB1E00000000000000B1 /* pose-for-meUITests */,
+			);
+			name = "pose-for-meUITests";
+			packageProductDependencies = (
+			);
+			productName = "pose-for-meUITests";
+			productReference = 7E57AB1E00000000000000B3 /* pose-for-meUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +175,14 @@
 				TargetAttributes = {
 					2132463D300880E4003B1979 = {
 						CreatedOnToolsVersion = 26.2;
+					};
+					7E57AB1E00000000000000A2 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 2132463D300880E4003B1979;
+					};
+					7E57AB1E00000000000000B2 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 2132463D300880E4003B1979;
 					};
 				};
 			};
@@ -100,12 +201,28 @@
 			projectRoot = "";
 			targets = (
 				2132463D300880E4003B1979 /* pose-for-me */,
+				7E57AB1E00000000000000A2 /* pose-for-meTests */,
+				7E57AB1E00000000000000B2 /* pose-for-meUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		2132463C300880E4003B1979 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E57AB1E00000000000000A6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E57AB1E00000000000000B6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +239,34 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7E57AB1E00000000000000A4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7E57AB1E00000000000000B4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7E57AB1E00000000000000AA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2132463D300880E4003B1979 /* pose-for-me */;
+			targetProxy = 7E57AB1E00000000000000AB /* PBXContainerItemProxy */;
+		};
+		7E57AB1E00000000000000BA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 2132463D300880E4003B1979 /* pose-for-me */;
+			targetProxy = 7E57AB1E00000000000000BB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		21324647300880E6003B1979 /* Debug */ = {
@@ -314,6 +458,92 @@
 			};
 			name = Release;
 		};
+		7E57AB1E00000000000000A8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V9RLAJRWS8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "pose-for-me.pose-for-meTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pose-for-me.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pose-for-me";
+			};
+			name = Debug;
+		};
+		7E57AB1E00000000000000A9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V9RLAJRWS8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "pose-for-me.pose-for-meTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/pose-for-me.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/pose-for-me";
+			};
+			name = Release;
+		};
+		7E57AB1E00000000000000B8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V9RLAJRWS8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "pose-for-me.pose-for-meUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "pose-for-me";
+			};
+			name = Debug;
+		};
+		7E57AB1E00000000000000B9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = V9RLAJRWS8;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "pose-for-me.pose-for-meUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = "pose-for-me";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -331,6 +561,24 @@
 			buildConfigurations = (
 				2132464A300880E6003B1979 /* Debug */,
 				2132464B300880E6003B1979 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7E57AB1E00000000000000A7 /* Build configuration list for PBXNativeTarget "pose-for-meTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E57AB1E00000000000000A8 /* Debug */,
+				7E57AB1E00000000000000A9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7E57AB1E00000000000000B7 /* Build configuration list for PBXNativeTarget "pose-for-meUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E57AB1E00000000000000B8 /* Debug */,
+				7E57AB1E00000000000000B9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

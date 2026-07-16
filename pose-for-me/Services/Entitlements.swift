@@ -20,6 +20,11 @@ final class Entitlements: ObservableObject {
     private var updatesTask: Task<Void, Never>?
 
     init() {
+        #if DEBUG
+        if UserDefaults.standard.bool(forKey: "pose4me.resetPro") {
+            UserDefaults.standard.removeObject(forKey: Self.devUnlockKey)
+        }
+        #endif
         isPro = UserDefaults.standard.bool(forKey: Self.devUnlockKey)
         updatesTask = Task { [weak self] in
             for await update in StoreKit.Transaction.updates {

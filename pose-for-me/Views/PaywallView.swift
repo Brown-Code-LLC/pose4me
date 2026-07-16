@@ -47,6 +47,7 @@ struct PaywallView: View {
                         .padding(10)
                         .background(.ultraThinMaterial, in: Circle())
                 }
+                .accessibilityIdentifier("paywall.close")
             }
             GuideFigureView(spec: PoseSpec(leftUpperArm: -172, leftForearm: -176,
                                            rightUpperArm: 172, rightForearm: 176))
