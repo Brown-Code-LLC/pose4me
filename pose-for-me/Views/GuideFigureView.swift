@@ -67,9 +67,9 @@ struct GuideFigureView: View {
 
     var body: some View {
         MorphingSkeletonShape(from: fromPose, to: toPose, progress: progress)
-            .stroke(Theme.auroraGradient,
+            .stroke(Theme.brandGradient,
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
-            .shadow(color: glow ? Theme.aurora2.opacity(0.8) : .clear, radius: glow ? 10 : 0)
+            .shadow(color: glow ? Theme.accent.opacity(0.8) : .clear, radius: glow ? 10 : 0)
             .scaleEffect(breathe ? 1.02 : 0.99)
             .onAppear {
                 guard glow else { return }
@@ -88,13 +88,96 @@ struct GuideFigureView: View {
     }
 }
 
+/// A coach that repeatedly performs the movement into `spec` on loop:
+/// morph from `fromSpec` into the target, hold it, ease back, repeat.
+/// Used by the in-session "Copy me" card so the user sees the motion, not a
+/// frozen pose — and unlike ExercisePreviewPlayer it never leaves the keyframe
+/// the tracker is currently scoring.
+struct LoopingGuideFigureView: View {
+    let fromSpec: PoseSpec
+    let spec: PoseSpec
+    var lineWidth: CGFloat = 4
+
+    @State private var showTarget = true
+
+    var body: some View {
+        // GuideFigureView owns the spring morph via its onChange(of: spec); this
+        // loop only toggles which pose it is given, so the animation path is the
+        // same one the intro demo uses.
+        GuideFigureView(spec: showTarget ? spec : fromSpec, lineWidth: lineWidth)
+            .task(id: spec) {
+                showTarget = true
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(2.6)) // hold the target
+                    guard !Task.isCancelled else { return }
+                    showTarget = false                        // ease back to start
+                    try? await Task.sleep(for: .seconds(1.2))
+                    guard !Task.isCancelled else { return }
+                    showTarget = true                         // perform the move again
+                }
+            }
+    }
+}
+
+/// Loops the exercise's full movement — the guide figure morphs through every
+/// keyframe with its cue caption — so users watch the motion before copying it.
+struct ExercisePreviewPlayer: View {
+    let exercise: Exercise
+    /// Seconds each keyframe is shown before morphing to the next.
+    var stepSeconds: Double = 2.2
+
+    @State private var index = 0
+
+    var body: some View {
+        VStack(spacing: 16) {
+            ZStack(alignment: .topTrailing) {
+                GuideFigureView(spec: exercise.keyframes[index].spec)
+                    .frame(maxWidth: .infinity)
+
+                Label("Demo", systemImage: "play.fill")
+                    .font(.body(11, .bold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(Theme.accent, in: Capsule())
+            }
+
+            Text(exercise.keyframes[index].cue)
+                .font(.appHeadline)
+                .foregroundStyle(Theme.accent)
+                .multilineTextAlignment(.center)
+                .contentTransition(.opacity)
+                .animation(.easeInOut(duration: 0.4), value: index)
+                .frame(minHeight: 44, alignment: .top)
+
+            // Step dots mirroring the movement's keyframes.
+            HStack(spacing: 7) {
+                ForEach(0..<exercise.keyframes.count, id: \.self) { i in
+                    Capsule()
+                        .fill(i == index ? Theme.accent : Theme.track)
+                        .frame(width: i == index ? 22 : 8, height: 5)
+                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: index)
+                }
+            }
+        }
+        .task {
+            guard exercise.keyframes.count > 1 else { return }
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(stepSeconds))
+                guard !Task.isCancelled else { return }
+                index = (index + 1) % exercise.keyframes.count
+            }
+        }
+    }
+}
+
 /// Static mini figure for library cards and thumbnails.
 struct PoseThumbnail: View {
     let spec: PoseSpec
 
     var body: some View {
         MorphingSkeletonShape(from: spec.keypoints(), to: spec.keypoints(), progress: 1)
-            .stroke(Theme.auroraGradient,
+            .stroke(Theme.brandGradient,
                     style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
     }
 }

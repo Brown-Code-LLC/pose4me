@@ -15,6 +15,8 @@ final class SessionViewModel: ObservableObject {
     let keyframes: [PoseKeyframe]
     let usesCamera: Bool
     let strictness: Double
+    /// Length of the animated movement demo on the intro screen (0 = off).
+    let previewSeconds: Int
 
     @Published var stage: Stage = .intro
     @Published var keyframeIndex = 0
@@ -31,6 +33,12 @@ final class SessionViewModel: ObservableObject {
     private var demoPhase: Double = 0
 
     var currentKeyframe: PoseKeyframe { keyframes[keyframeIndex] }
+
+    /// Where the "Copy me" coach starts its looping demonstration: the pose the user
+    /// is coming from (previous keyframe), or a neutral stance for the first one.
+    var copyMeStartSpec: PoseSpec {
+        keyframeIndex == 0 ? PoseSpec() : keyframes[keyframeIndex - 1].spec
+    }
     var totalDuration: Double { keyframes.reduce(0) { $0 + $1.holdSeconds } }
     var averageScore: Double? {
         guard usesCamera, !scoreSamples.isEmpty else { return nil }
@@ -54,6 +62,7 @@ final class SessionViewModel: ObservableObject {
             && settings.cameraTrackingEnabled
             && cameraAvailable
         self.strictness = settings.matchStrictness
+        self.previewSeconds = settings.previewSeconds
     }
 
     func begin() {
@@ -175,10 +184,14 @@ final class SessionViewModel: ObservableObject {
 struct SessionView: View {
     @EnvironmentObject private var settings: UserSettings
     @EnvironmentObject private var sessionStore: SessionStore
+    @EnvironmentObject private var scheduler: ReminderScheduler
     @Environment(\.dismiss) private var dismiss
 
     @StateObject private var model: SessionViewModel
     @StateObject private var camera = CameraManager()
+    @Environment(\.colorScheme) private var systemScheme
+    /// Anchor for the intro demo's auto-start countdown.
+    @State private var introStartedAt = Date()
 
     init(exercise: Exercise, settings: SettingsData) {
         _model = StateObject(wrappedValue: SessionViewModel(
@@ -204,7 +217,9 @@ struct SessionView: View {
             case .done: summary
             }
         }
-        .preferredColorScheme(.dark)
+        // Over live video the HUD must always read light-on-dark (glassmorphism);
+        // adaptive tokens resolve to their dark variants here regardless of app theme.
+        .environment(\.colorScheme, model.usesCamera && !model.isDemoMode ? .dark : systemScheme)
         .task {
             if model.usesCamera && !model.isDemoMode {
                 await camera.start()
@@ -230,34 +245,62 @@ struct SessionView: View {
     // MARK: - Stages
 
     private var intro: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: 18) {
             headerBar(showsTitle: false)
             Spacer()
 
-            GuideFigureView(spec: model.keyframes[0].spec)
-                .frame(width: 200, height: 260)
+            if model.previewSeconds > 0 {
+                // Animated movement demo: the figure performs the whole stretch on
+                // loop until the user starts (or the customizable timer auto-starts).
+                ExercisePreviewPlayer(exercise: model.exercise)
+                    .frame(width: 230, height: 330)
+            } else {
+                GuideFigureView(spec: model.keyframes[0].spec)
+                    .frame(width: 200, height: 260)
+            }
 
             Text(model.exercise.name)
-                .font(.largeTitle.bold())
+                .font(.appLargeTitle)
                 .foregroundStyle(Theme.textPrimary)
 
             Text(model.exercise.instructions)
-                .font(.body)
+                .font(.appBody)
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
 
             Label("\(Int(model.totalDuration))s • \(model.usesCamera ? "camera tracked" : "timer")",
                   systemImage: model.usesCamera ? "camera.viewfinder" : "timer")
-                .font(.subheadline)
+                .font(.appSubheadline)
                 .foregroundStyle(Theme.textTertiary)
 
             Spacer()
 
-            Button("Begin") { model.begin() }
-                .buttonStyle(PrimaryButtonStyle())
+            if model.previewSeconds > 0 {
+                TimelineView(.periodic(from: introStartedAt, by: 1)) { context in
+                    let elapsed = Int(context.date.timeIntervalSince(introStartedAt))
+                    let remaining = max(0, model.previewSeconds - elapsed)
+                    Button(remaining > 0 ? "Start now • auto in \(remaining)s" : "Start now") {
+                        model.begin()
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
                 .padding(.horizontal, 40)
                 .padding(.bottom, 30)
+            } else {
+                Button("Begin") { model.begin() }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .padding(.horizontal, 40)
+                    .padding(.bottom, 30)
+            }
+        }
+        .task {
+            // Auto-start once the demo has played for the user-chosen duration.
+            guard model.previewSeconds > 0 else { return }
+            try? await Task.sleep(for: .seconds(Double(model.previewSeconds)))
+            if !Task.isCancelled, model.stage == .intro {
+                model.begin()
+            }
         }
     }
 
@@ -265,14 +308,14 @@ struct SessionView: View {
         VStack {
             Spacer()
             Text("\(n)")
-                .font(.system(size: 130, weight: .black, design: .rounded))
-                .foregroundStyle(Theme.auroraGradient)
+                .font(.display(110, .heavy))
+                .foregroundStyle(Theme.brandGradient)
                 .contentTransition(.numericText(countsDown: true))
                 .id(n)
                 .transition(.scale(scale: 1.6).combined(with: .opacity))
                 .animation(.spring(response: 0.4, dampingFraction: 0.6), value: n)
             Text("Get in frame — whole body visible")
-                .font(.headline)
+                .font(.appHeadline)
                 .foregroundStyle(Theme.textSecondary)
             Spacer()
         }
@@ -282,7 +325,9 @@ struct SessionView: View {
         ZStack {
             if model.usesCamera {
                 SkeletonOverlayView(pose: model.displayedPose,
-                                    matchScore: model.matchResult.score)
+                                    matchScore: model.matchResult.score,
+                                    offTargetJoint: model.matchResult.score < 0.55
+                                        ? model.matchResult.worstLimb : nil)
                     .ignoresSafeArea()
             }
 
@@ -291,12 +336,14 @@ struct SessionView: View {
 
                 HStack(alignment: .top) {
                     Spacer()
-                    // The pose to imitate, springing between keyframes.
+                    // The pose to imitate: a coach performing the movement into the
+                    // current target on loop.
                     VStack(spacing: 6) {
-                        GuideFigureView(spec: model.currentKeyframe.spec, lineWidth: 4)
+                        LoopingGuideFigureView(fromSpec: model.copyMeStartSpec,
+                                               spec: model.currentKeyframe.spec)
                             .frame(width: 110, height: 150)
                         Text("Copy me")
-                            .font(.caption2.weight(.semibold))
+                            .font(.body(11, .semibold))
                             .foregroundStyle(Theme.textSecondary)
                     }
                     .padding(10)
@@ -309,7 +356,7 @@ struct SessionView: View {
 
                 VStack(spacing: 14) {
                     Text(model.currentKeyframe.cue)
-                        .font(.title3.weight(.semibold))
+                        .font(.display(18, .semibold))
                         .foregroundStyle(Theme.textPrimary)
                         .multilineTextAlignment(.center)
                         .contentTransition(.opacity)
@@ -317,12 +364,12 @@ struct SessionView: View {
 
                     if let cue = model.coachingCue {
                         Text(cue)
-                            .font(.subheadline)
+                            .font(.appSubheadline)
                             .foregroundStyle(Theme.warning)
                             .transition(.opacity)
                     } else if model.usesCamera && model.matchResult.score >= 0.55 {
                         Text("Great form — hold it")
-                            .font(.subheadline)
+                            .font(.appSubheadline)
                             .foregroundStyle(Theme.success)
                             .transition(.opacity)
                     }
@@ -334,7 +381,7 @@ struct SessionView: View {
                     HStack(spacing: 8) {
                         ForEach(0..<model.keyframes.count, id: \.self) { i in
                             Capsule()
-                                .fill(i <= model.keyframeIndex ? Theme.aurora1 : Color.white.opacity(0.2))
+                                .fill(i <= model.keyframeIndex ? Theme.accent : Theme.track)
                                 .frame(width: i == model.keyframeIndex ? 26 : 10, height: 5)
                                 .animation(.spring(response: 0.4, dampingFraction: 0.8),
                                            value: model.keyframeIndex)
@@ -349,15 +396,15 @@ struct SessionView: View {
     private var holdRing: some View {
         ZStack {
             Circle()
-                .stroke(Color.white.opacity(0.15), lineWidth: 8)
+                .stroke(Theme.track, lineWidth: 8)
             Circle()
                 .trim(from: 0, to: model.holdProgress)
-                .stroke(Theme.auroraGradient,
+                .stroke(Theme.brandGradient,
                         style: StrokeStyle(lineWidth: 8, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 0.12), value: model.holdProgress)
             Text("\(Int(ceil(model.currentKeyframe.holdSeconds * (1 - model.holdProgress))))")
-                .font(.title2.bold().monospacedDigit())
+                .font(.display(21, .bold).monospacedDigit())
                 .foregroundStyle(Theme.textPrimary)
         }
     }
@@ -367,11 +414,11 @@ struct SessionView: View {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 84))
-                .foregroundStyle(Theme.auroraGradient)
+                .foregroundStyle(Theme.brandGradient)
                 .symbolEffect(.bounce, value: model.stage)
 
             Text("Stretch complete!")
-                .font(.largeTitle.bold())
+                .font(.appLargeTitle)
                 .foregroundStyle(Theme.textPrimary)
 
             HStack(spacing: 14) {
@@ -384,13 +431,15 @@ struct SessionView: View {
             .padding(.horizontal, 24)
 
             Text("Blood is moving, spine is happy. See you next hour.")
-                .font(.subheadline)
+                .font(.appSubheadline)
                 .foregroundStyle(Theme.textSecondary)
 
             Spacer()
 
             Button("Done") {
                 sessionStore.add(model.makeRecord())
+                // You just stretched — restart the interval clock from now.
+                Task { await scheduler.reschedule(settings: settings.data) }
                 dismiss()
             }
             .buttonStyle(PrimaryButtonStyle())
@@ -402,10 +451,10 @@ struct SessionView: View {
     private func summaryStat(value: String, label: String) -> some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.title3.bold())
+                .font(.appTitle3)
                 .foregroundStyle(Theme.textPrimary)
             Text(label)
-                .font(.caption)
+                .font(.appCaption)
                 .foregroundStyle(Theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -416,7 +465,7 @@ struct SessionView: View {
         HStack {
             if showsTitle {
                 Text(model.exercise.name)
-                    .font(.headline)
+                    .font(.appHeadline)
                     .foregroundStyle(Theme.textPrimary)
             }
             Spacer()
@@ -425,7 +474,7 @@ struct SessionView: View {
                 dismiss()
             } label: {
                 Image(systemName: "xmark")
-                    .font(.subheadline.bold())
+                    .font(.body(15, .bold))
                     .foregroundStyle(Theme.textPrimary)
                     .padding(10)
                     .background(.ultraThinMaterial, in: Circle())
