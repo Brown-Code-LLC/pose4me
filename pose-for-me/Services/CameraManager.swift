@@ -10,6 +10,12 @@ import CoreVideo
 /// main actor for SwiftUI.
 @MainActor
 final class CameraManager: ObservableObject {
+    // Xcode 26.2's Swift runtime intermittently aborts in the isolated-deinit
+    // executor hop (malloc abort in TaskLocal scope) when MainActor classes
+    // deallocate. Deinit only releases storage, which is thread-safe, so opt
+    // out of isolation and skip the crashing hop entirely.
+    nonisolated deinit {}
+
     @Published private(set) var latestPose: BodyPose?
     @Published private(set) var isRunning = false
     @Published private(set) var permissionDenied = false

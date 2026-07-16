@@ -69,6 +69,12 @@ struct SettingsData: Codable, Equatable {
 
 @MainActor
 final class UserSettings: ObservableObject {
+    // Xcode 26.2's Swift runtime intermittently aborts in the isolated-deinit
+    // executor hop (malloc abort in TaskLocal scope) when MainActor classes
+    // deallocate. Deinit only releases storage, which is thread-safe, so opt
+    // out of isolation and skip the crashing hop entirely.
+    nonisolated deinit {}
+
     @Published var data: SettingsData {
         didSet {
             guard data != oldValue else { return }
@@ -86,6 +92,20 @@ final class UserSettings: ObservableObject {
         } else {
             data = SettingsData()
         }
+
+        #if DEBUG
+        // UI-testing hooks (launch arguments land in the UserDefaults argument
+        // domain; none of these mutations persist because didSet skips init).
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: "pose4me.resetSettings") { data = SettingsData() }
+        if defaults.bool(forKey: "pose4me.skipOnboarding") { data.hasOnboarded = true }
+        let overrideSession = defaults.integer(forKey: "pose4me.sessionSeconds")
+        if (10...300).contains(overrideSession) { data.sessionSeconds = overrideSession }
+        if defaults.object(forKey: "pose4me.previewSeconds") != nil {
+            data.previewSeconds = defaults.integer(forKey: "pose4me.previewSeconds")
+        }
+        #endif
+
         Haptics.isEnabled = data.hapticsEnabled
     }
 

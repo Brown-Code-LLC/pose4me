@@ -4,6 +4,12 @@ import SwiftUI
 /// Drives one stretch session: countdown -> per-keyframe tracking -> summary.
 @MainActor
 final class SessionViewModel: ObservableObject {
+    // Xcode 26.2's Swift runtime intermittently aborts in the isolated-deinit
+    // executor hop (malloc abort in TaskLocal scope) when MainActor classes
+    // deallocate. Deinit only releases storage, which is thread-safe, so opt
+    // out of isolation and skip the crashing hop entirely.
+    nonisolated deinit {}
+
     enum Stage: Equatable {
         case intro
         case countdown(Int)
@@ -113,7 +119,7 @@ final class SessionViewModel: ObservableObject {
                                                strictness: strictness)
                 matchResult = result
                 scoreSamples.append(result.score)
-                gate = result.score >= 0.55
+                gate = result.passesGate
             } else {
                 matchResult = .none
                 gate = false
@@ -167,7 +173,7 @@ final class SessionViewModel: ObservableObject {
     /// Human coaching cue for the limb that is most out of position.
     var coachingCue: String? {
         guard usesCamera, stage == .active else { return nil }
-        if matchResult.score >= 0.55 { return nil }
+        if matchResult.passesGate { return nil }
         switch matchResult.worstLimb {
         case .leftElbow, .leftWrist: return "Adjust your left arm"
         case .rightElbow, .rightWrist: return "Adjust your right arm"
@@ -284,12 +290,14 @@ struct SessionView: View {
                         model.begin()
                     }
                     .buttonStyle(PrimaryButtonStyle())
+                    .accessibilityIdentifier("session.start")
                 }
                 .padding(.horizontal, 40)
                 .padding(.bottom, 30)
             } else {
                 Button("Begin") { model.begin() }
                     .buttonStyle(PrimaryButtonStyle())
+                    .accessibilityIdentifier("session.start")
                     .padding(.horizontal, 40)
                     .padding(.bottom, 30)
             }
@@ -326,7 +334,7 @@ struct SessionView: View {
             if model.usesCamera {
                 SkeletonOverlayView(pose: model.displayedPose,
                                     matchScore: model.matchResult.score,
-                                    offTargetJoint: model.matchResult.score < 0.55
+                                    offTargetJoint: !model.matchResult.passesGate
                                         ? model.matchResult.worstLimb : nil)
                     .ignoresSafeArea()
             }
@@ -367,7 +375,7 @@ struct SessionView: View {
                             .font(.appSubheadline)
                             .foregroundStyle(Theme.warning)
                             .transition(.opacity)
-                    } else if model.usesCamera && model.matchResult.score >= 0.55 {
+                    } else if model.usesCamera && model.matchResult.passesGate {
                         Text("Great form — hold it")
                             .font(.appSubheadline)
                             .foregroundStyle(Theme.success)
@@ -443,6 +451,7 @@ struct SessionView: View {
                 dismiss()
             }
             .buttonStyle(PrimaryButtonStyle())
+            .accessibilityIdentifier("session.done")
             .padding(.horizontal, 40)
             .padding(.bottom, 30)
         }
@@ -479,6 +488,7 @@ struct SessionView: View {
                     .padding(10)
                     .background(.ultraThinMaterial, in: Circle())
             }
+            .accessibilityIdentifier("session.close")
         }
         .padding(.horizontal, 16)
         .padding(.top, 8)

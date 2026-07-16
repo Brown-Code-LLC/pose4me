@@ -93,17 +93,29 @@ struct PoseSpec: Sendable, Equatable {
     }
 
     /// Limb angles the matcher scores, with per-limb weights.
-    /// (joint pair defining the segment, target angle, weight)
+    ///
+    /// Limbs that deviate from the neutral stance are what the pose is *about*
+    /// (raise your arms, lift your knee...). They are marked defining and weighted
+    /// up so a user standing still can never ride the many still-neutral limbs
+    /// past the match gate.
     var matchTargets: [PoseMatchTarget] {
-        [
-            PoseMatchTarget(from: .leftShoulder, to: .leftElbow, angle: leftUpperArm, weight: 1.0),
-            PoseMatchTarget(from: .leftElbow, to: .leftWrist, angle: leftForearm, weight: 0.8),
-            PoseMatchTarget(from: .rightShoulder, to: .rightElbow, angle: rightUpperArm, weight: 1.0),
-            PoseMatchTarget(from: .rightElbow, to: .rightWrist, angle: rightForearm, weight: 0.8),
-            PoseMatchTarget(from: .leftHip, to: .leftKnee, angle: leftThigh, weight: 0.6),
-            PoseMatchTarget(from: .leftKnee, to: .leftAnkle, angle: leftShin, weight: 0.5),
-            PoseMatchTarget(from: .rightHip, to: .rightKnee, angle: rightThigh, weight: 0.6),
-            PoseMatchTarget(from: .rightKnee, to: .rightAnkle, angle: rightShin, weight: 0.5),
+        let neutral = PoseSpec()
+        func target(_ from: BodyJoint, _ to: BodyJoint,
+                    _ angle: Double, _ neutralAngle: Double, _ base: Double) -> PoseMatchTarget {
+            let defining = PoseMatcher.angleDelta(angle, neutralAngle) > 20
+            return PoseMatchTarget(from: from, to: to, angle: angle,
+                                   weight: defining ? base * 2.2 : base,
+                                   isDefining: defining)
+        }
+        return [
+            target(.leftShoulder, .leftElbow, leftUpperArm, neutral.leftUpperArm, 1.0),
+            target(.leftElbow, .leftWrist, leftForearm, neutral.leftForearm, 0.8),
+            target(.rightShoulder, .rightElbow, rightUpperArm, neutral.rightUpperArm, 1.0),
+            target(.rightElbow, .rightWrist, rightForearm, neutral.rightForearm, 0.8),
+            target(.leftHip, .leftKnee, leftThigh, neutral.leftThigh, 0.6),
+            target(.leftKnee, .leftAnkle, leftShin, neutral.leftShin, 0.5),
+            target(.rightHip, .rightKnee, rightThigh, neutral.rightThigh, 0.6),
+            target(.rightKnee, .rightAnkle, rightShin, neutral.rightShin, 0.5),
         ]
     }
 }
@@ -114,4 +126,5 @@ struct PoseMatchTarget: Sendable, Equatable {
     var to: BodyJoint
     var angle: Double
     var weight: Double
+    var isDefining: Bool
 }

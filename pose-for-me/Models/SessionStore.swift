@@ -15,6 +15,12 @@ struct SessionRecord: Codable, Identifiable, Sendable {
 /// History + streak bookkeeping, persisted as JSON in Application Support.
 @MainActor
 final class SessionStore: ObservableObject {
+    // Xcode 26.2's Swift runtime intermittently aborts in the isolated-deinit
+    // executor hop (malloc abort in TaskLocal scope) when MainActor classes
+    // deallocate. Deinit only releases storage, which is thread-safe, so opt
+    // out of isolation and skip the crashing hop entirely.
+    nonisolated deinit {}
+
     @Published private(set) var records: [SessionRecord] = []
 
     private static var fileURL: URL {
@@ -30,12 +36,21 @@ final class SessionStore: ObservableObject {
         }
     }
 
+    /// In-memory store for unit tests: seeds records and never touches disk.
+    init(testRecords: [SessionRecord]) {
+        records = testRecords
+        persistsToDisk = false
+    }
+
+    private var persistsToDisk = true
+
     func add(_ record: SessionRecord) {
         records.append(record)
         save()
     }
 
     private func save() {
+        guard persistsToDisk else { return }
         if let raw = try? JSONEncoder().encode(records) {
             try? raw.write(to: Self.fileURL, options: .atomic)
         }
