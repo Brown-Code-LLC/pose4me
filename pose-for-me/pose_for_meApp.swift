@@ -17,18 +17,24 @@ struct pose_for_meApp: App {
 
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        AppFonts.registerAll()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(settings.colorSchemeOverride)
                 .environmentObject(settings)
                 .environmentObject(sessionStore)
                 .environmentObject(scheduler)
                 .environmentObject(entitlements)
         }
         .onChange(of: scenePhase) { _, phase in
-            // Keep the pending-notification chain topped up whenever we background.
+            // Non-destructive sync: tops up an exhausted chain but never resets a
+            // running countdown just because the app was backgrounded.
             if phase == .background, settings.data.hasOnboarded {
-                Task { await scheduler.reschedule(settings: settings.data) }
+                Task { await scheduler.refresh(settings: settings.data) }
             }
         }
     }

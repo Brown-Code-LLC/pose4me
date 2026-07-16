@@ -28,8 +28,7 @@ struct RootView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
                 .tag(Tab.settings)
         }
-        .tint(Theme.aurora1)
-        .preferredColorScheme(.dark)
+        .tint(Theme.accent)
         .fullScreenCover(item: $activeExercise) { exercise in
             SessionView(exercise: exercise, settings: settings.data)
         }
@@ -43,16 +42,23 @@ struct RootView: View {
             activeExercise = settings.suggestedExercise(isPro: entitlements.isPro)
         }
         .onChange(of: activeExercise == nil) { _, dismissed in
-            // After each session, refresh the reminder chain so the countdown restarts.
+            // Non-destructive: completing a stretch resets the countdown from
+            // SessionView's Done button; merely closing the sheet must not.
             if dismissed {
-                Task { await scheduler.reschedule(settings: settings.data) }
+                Task { await scheduler.refresh(settings: settings.data) }
             }
         }
         .task {
-            await scheduler.reschedule(settings: settings.data)
+            await scheduler.refresh(settings: settings.data)
             #if DEBUG
-            // UI-testing hook: `simctl launch <udid> <bundle> -pose4me.autostart <id>`
-            // jumps straight into a session (or any exercise id) on launch.
+            // UI-testing hooks: `-pose4me.autostart <id>` opens a session on launch,
+            // `-pose4me.tab <home|library|stats|settings>` selects a tab.
+            switch UserDefaults.standard.string(forKey: "pose4me.tab") {
+            case "library": tab = .library
+            case "stats": tab = .stats
+            case "settings": tab = .settings
+            default: break
+            }
             if let id = UserDefaults.standard.string(forKey: "pose4me.autostart") {
                 activeExercise = Exercise.byID(id) ?? settings.suggestedExercise(isPro: true)
             }
@@ -60,7 +66,7 @@ struct RootView: View {
         }
     }
 
-    /// Each tab paints the shared aurora background (TabView children are opaque).
+    /// Each tab paints the shared themed background (TabView children are opaque).
     private func screen<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
         ZStack {
             AppBackground()

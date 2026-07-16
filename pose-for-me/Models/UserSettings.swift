@@ -7,14 +7,19 @@ import SwiftUI
 struct SettingsData: Codable, Equatable {
     // Reminders
     var reminderIntervalMinutes: Int = 60        // 30...240
+    // Active window boundaries. Any combination works: daytime (9:00-18:00),
+    // overnight (22:30-6:15), or equal start/end for around-the-clock.
     var activeStartHour: Int = 9
+    var activeStartMinute: Int = 0
     var activeEndHour: Int = 18
+    var activeEndMinute: Int = 0
     var activeWeekdays: Set<Int> = [2, 3, 4, 5, 6] // Calendar weekday numbers (1 = Sunday)
     var snoozeMinutes: Int = 10
     var remindersEnabled: Bool = true
 
     // Sessions
     var sessionSeconds: Int = 60                 // 30 / 60 / 90 / custom
+    var previewSeconds: Int = 15                 // movement demo before start; 0 = off
     var cameraTrackingEnabled: Bool = true
     var matchStrictness: Double = 0.5            // 0 relaxed ... 1 strict
     var seatedFriendlyOnly: Bool = false
@@ -24,9 +29,42 @@ struct SettingsData: Codable, Equatable {
     // Feel
     var hapticsEnabled: Bool = true
     var voiceCuesEnabled: Bool = false
+    var appearance: String = "system"            // system / light / dark
 
     // Lifecycle
     var hasOnboarded: Bool = false
+
+    /// Window boundaries as minutes from midnight, the unit the scheduler compares in.
+    var activeStartMinutesFromMidnight: Int { activeStartHour * 60 + activeStartMinute }
+    var activeEndMinutesFromMidnight: Int { activeEndHour * 60 + activeEndMinute }
+
+    init() {}
+
+    /// Lenient decoding: any key missing from an older stored blob falls back to its
+    /// default, so adding a setting never wipes existing users' preferences.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let d = SettingsData()
+        reminderIntervalMinutes = try c.decodeIfPresent(Int.self, forKey: .reminderIntervalMinutes) ?? d.reminderIntervalMinutes
+        activeStartHour = try c.decodeIfPresent(Int.self, forKey: .activeStartHour) ?? d.activeStartHour
+        activeStartMinute = try c.decodeIfPresent(Int.self, forKey: .activeStartMinute) ?? d.activeStartMinute
+        activeEndHour = try c.decodeIfPresent(Int.self, forKey: .activeEndHour) ?? d.activeEndHour
+        activeEndMinute = try c.decodeIfPresent(Int.self, forKey: .activeEndMinute) ?? d.activeEndMinute
+        activeWeekdays = try c.decodeIfPresent(Set<Int>.self, forKey: .activeWeekdays) ?? d.activeWeekdays
+        snoozeMinutes = try c.decodeIfPresent(Int.self, forKey: .snoozeMinutes) ?? d.snoozeMinutes
+        remindersEnabled = try c.decodeIfPresent(Bool.self, forKey: .remindersEnabled) ?? d.remindersEnabled
+        sessionSeconds = try c.decodeIfPresent(Int.self, forKey: .sessionSeconds) ?? d.sessionSeconds
+        previewSeconds = try c.decodeIfPresent(Int.self, forKey: .previewSeconds) ?? d.previewSeconds
+        cameraTrackingEnabled = try c.decodeIfPresent(Bool.self, forKey: .cameraTrackingEnabled) ?? d.cameraTrackingEnabled
+        matchStrictness = try c.decodeIfPresent(Double.self, forKey: .matchStrictness) ?? d.matchStrictness
+        seatedFriendlyOnly = try c.decodeIfPresent(Bool.self, forKey: .seatedFriendlyOnly) ?? d.seatedFriendlyOnly
+        maxDifficulty = try c.decodeIfPresent(Int.self, forKey: .maxDifficulty) ?? d.maxDifficulty
+        enabledCategories = try c.decodeIfPresent(Set<String>.self, forKey: .enabledCategories) ?? d.enabledCategories
+        hapticsEnabled = try c.decodeIfPresent(Bool.self, forKey: .hapticsEnabled) ?? d.hapticsEnabled
+        voiceCuesEnabled = try c.decodeIfPresent(Bool.self, forKey: .voiceCuesEnabled) ?? d.voiceCuesEnabled
+        appearance = try c.decodeIfPresent(String.self, forKey: .appearance) ?? d.appearance
+        hasOnboarded = try c.decodeIfPresent(Bool.self, forKey: .hasOnboarded) ?? d.hasOnboarded
+    }
 }
 
 @MainActor
@@ -69,6 +107,15 @@ final class UserSettings: ObservableObject {
 
     var enabledCategoriesSet: Set<ExerciseCategory> {
         Set(data.enabledCategories.compactMap(ExerciseCategory.init(rawValue:)))
+    }
+
+    /// nil = follow the system; otherwise force light/dark.
+    var colorSchemeOverride: ColorScheme? {
+        switch data.appearance {
+        case "light": .light
+        case "dark": .dark
+        default: nil
+        }
     }
 
     /// Deterministic-but-rotating pick so the suggested stretch changes each hour.

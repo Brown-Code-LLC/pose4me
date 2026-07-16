@@ -1,5 +1,7 @@
 import Combine
 import SwiftUI
+import UIKit
+import UserNotifications
 
 /// Today screen: countdown to the next reminder, streak, and a one-tap stretch.
 struct HomeView: View {
@@ -27,10 +29,10 @@ struct HomeView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(greeting)
-                    .font(.title.bold())
+                    .font(.appTitle)
                     .foregroundStyle(Theme.textPrimary)
                 Text("Little stretches, big difference.")
-                    .font(.subheadline)
+                    .font(.appSubheadline)
                     .foregroundStyle(Theme.textSecondary)
             }
             Spacer()
@@ -41,7 +43,7 @@ struct HomeView: View {
                     .foregroundStyle(sessionStore.streakDays > 0 ? Theme.ember : Theme.textTertiary)
                     .symbolEffect(.pulse, isActive: sessionStore.streakDays > 0)
                 Text("\(sessionStore.streakDays)")
-                    .font(.headline.bold())
+                    .font(.display(16, .bold))
                     .foregroundStyle(Theme.textPrimary)
             }
             .padding(12)
@@ -56,34 +58,60 @@ struct HomeView: View {
                 let remaining = scheduler.nextFireDate?.timeIntervalSince(context.date)
                 ZStack {
                     Circle()
-                        .stroke(Color.white.opacity(0.12), lineWidth: 12)
+                        .stroke(Theme.track, lineWidth: 12)
                     Circle()
                         .trim(from: 0, to: countdownFraction(remaining: remaining))
-                        .stroke(Theme.auroraGradient,
+                        .stroke(Theme.brandGradient,
                                 style: StrokeStyle(lineWidth: 12, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                         .animation(.linear(duration: 1), value: remaining ?? 0)
                     VStack(spacing: 4) {
                         if let remaining, remaining > 0 {
                             Text(timeString(remaining))
-                                .font(.system(size: 38, weight: .bold, design: .rounded))
+                                .font(.display(34, .bold))
                                 .monospacedDigit()
                                 .foregroundStyle(Theme.textPrimary)
                             Text("until next stretch")
-                                .font(.caption)
+                                .font(.appCaption)
                                 .foregroundStyle(Theme.textSecondary)
                         } else {
                             Text(settings.data.remindersEnabled ? "—" : "Off")
-                                .font(.system(size: 38, weight: .bold, design: .rounded))
+                                .font(.display(34, .bold))
                                 .foregroundStyle(Theme.textPrimary)
+                            // With overnight windows supported, a missing countdown
+                            // means either paused reminders or no active days left on.
                             Text(settings.data.remindersEnabled
-                                 ? "outside active hours" : "reminders paused")
-                                .font(.caption)
+                                 ? "no active days selected" : "reminders paused")
+                                .font(.appCaption)
                                 .foregroundStyle(Theme.textSecondary)
                         }
                     }
                 }
                 .frame(width: 210, height: 210)
+            }
+
+            if settings.data.remindersEnabled && !scheduler.authorizationGranted {
+                Button {
+                    Task {
+                        if scheduler.authorizationStatus == .notDetermined {
+                            // Never asked yet: show the system permission prompt here.
+                            await scheduler.requestAuthorization()
+                            await scheduler.reschedule(settings: settings.data)
+                        } else if let url = URL(string: UIApplication.openSettingsURLString) {
+                            // Previously denied: iOS only allows changing it in Settings.
+                            await UIApplication.shared.open(url)
+                        }
+                    }
+                } label: {
+                    Label(scheduler.authorizationStatus == .notDetermined
+                          ? "Tap to turn on notifications so we can ping you when it's time."
+                          : "Notifications are off — the countdown works, but you won't get pinged. Tap to open iOS Settings.",
+                          systemImage: "bell.slash.fill")
+                        .font(.appCaption)
+                        .foregroundStyle(Theme.warning)
+                        .multilineTextAlignment(.center)
+                }
+                .buttonStyle(.plain)
             }
 
             Button {
@@ -107,13 +135,13 @@ struct HomeView: View {
                     .frame(width: 56, height: 76)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Up next for you")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Theme.aurora1)
+                        .font(.body(12, .semibold))
+                        .foregroundStyle(Theme.accent)
                     Text(exercise.name)
-                        .font(.headline)
+                        .font(.appHeadline)
                         .foregroundStyle(Theme.textPrimary)
                     Text(exercise.benefit)
-                        .font(.caption)
+                        .font(.appCaption)
                         .foregroundStyle(Theme.textSecondary)
                         .lineLimit(2)
                 }
@@ -132,10 +160,10 @@ struct HomeView: View {
                       symbol: "checkmark.circle.fill", color: Theme.success)
             Divider().background(Theme.cardStroke).padding(.vertical, 6)
             todayStat(value: String(format: "%.1f", sessionStore.todayMinutes), label: "minutes",
-                      symbol: "clock.fill", color: Theme.aurora2)
+                      symbol: "clock.fill", color: Theme.accent)
             Divider().background(Theme.cardStroke).padding(.vertical, 6)
             todayStat(value: "\(settings.data.reminderIntervalMinutes)m", label: "interval",
-                      symbol: "bell.fill", color: Theme.aurora3)
+                      symbol: "bell.fill", color: Theme.mintSoft)
         }
         .card(padding: 14)
     }
@@ -143,13 +171,13 @@ struct HomeView: View {
     private func todayStat(value: String, label: String, symbol: String, color: Color) -> some View {
         VStack(spacing: 5) {
             Image(systemName: symbol)
-                .font(.subheadline)
+                .font(.appSubheadline)
                 .foregroundStyle(color)
             Text(value)
-                .font(.title3.bold())
+                .font(.appTitle3)
                 .foregroundStyle(Theme.textPrimary)
             Text(label)
-                .font(.caption2)
+                .font(.appCaption2)
                 .foregroundStyle(Theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
