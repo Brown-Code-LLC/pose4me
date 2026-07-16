@@ -2,23 +2,21 @@
 //  ContentView.swift
 //  pose-for-me
 //
-//  Created by Nicholas Darko Brown on 7/15/26.
-//
 
+import Combine
 import SwiftUI
 
+/// Entry gate: onboarding on first launch, main app afterwards.
 struct ContentView: View {
-    var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
-    }
-}
+    @EnvironmentObject private var settings: UserSettings
 
-#Preview {
-    ContentView()
+    var body: some View {
+        if settings.data.hasOnboarded {
+            RootView()
+                .transition(.opacity)
+        } else {
+            OnboardingView()
+                .transition(.opacity)
+        }
+    }
 }
