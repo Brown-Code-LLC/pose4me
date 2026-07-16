@@ -47,6 +47,13 @@ final class SessionStore: ObservableObject {
     func add(_ record: SessionRecord) {
         records.append(record)
         save()
+        publishToWidgets()
+    }
+
+    /// Mirrors streak/today stats to the widget and watch surfaces.
+    func publishToWidgets() {
+        WidgetBridge.setStats(streakDays: streakDays, todayCount: todayCount)
+        WatchSyncService.shared.push()
     }
 
     private func save() {

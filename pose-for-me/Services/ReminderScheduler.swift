@@ -13,7 +13,13 @@ final class ReminderScheduler: NSObject, ObservableObject {
 
     @Published private(set) var authorizationGranted = false
     @Published private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
-    @Published private(set) var nextFireDate: Date?
+    @Published private(set) var nextFireDate: Date? {
+        didSet {
+            guard nextFireDate != oldValue else { return }
+            WidgetBridge.setNextFireDate(nextFireDate)
+            WatchSyncService.shared.push()
+        }
+    }
 
     /// Set when the user opens the app from a stretch notification; RootView observes
     /// this and launches a session.

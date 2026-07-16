@@ -6,6 +6,7 @@ struct RootView: View {
     @EnvironmentObject private var settings: UserSettings
     @EnvironmentObject private var scheduler: ReminderScheduler
     @EnvironmentObject private var entitlements: Entitlements
+    @EnvironmentObject private var sessionStore: SessionStore
 
     @State private var tab: Tab = .home
     @State private var activeExercise: Exercise?
@@ -48,7 +49,15 @@ struct RootView: View {
                 Task { await scheduler.refresh(settings: settings.data) }
             }
         }
+        .onOpenURL { url in
+            // Widget/complication tap -> straight into a stretch.
+            if url.scheme == "pose4me" {
+                activeExercise = settings.suggestedExercise(isPro: entitlements.isPro)
+            }
+        }
         .task {
+            WatchSyncService.shared.activate()
+            sessionStore.publishToWidgets()
             await scheduler.refresh(settings: settings.data)
             #if DEBUG
             // UI-testing hooks: `-pose4me.autostart <id>` opens a session on launch,
