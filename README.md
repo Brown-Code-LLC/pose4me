@@ -38,6 +38,7 @@ you until the stretch is done.
 Product IDs `pose4me.pro.monthly` / `pose4me.pro.yearly` are wired through StoreKit 2 but
 not yet created in App Store Connect. Until they exist, the paywall clearly falls back to
 a local developer unlock so the full app is testable.
+(TBD)
 
 ## Project layout
 
