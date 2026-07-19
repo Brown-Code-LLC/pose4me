@@ -52,10 +52,13 @@ struct PoseSpec: Sendable, Equatable {
             CGPoint(x: p.x + v.dx * s, y: p.y + v.dy * s)
         }
 
-        let leftShoulder = offset(shoulderCenter, perp, -Self.shoulderHalfWidth)
-        let rightShoulder = offset(shoulderCenter, perp, Self.shoulderHalfWidth)
-        let leftHip = offset(hipCenter, perp, -Self.hipHalfWidth)
-        let rightHip = offset(hipCenter, perp, Self.hipHalfWidth)
+        // perp points toward the viewer's left when the spine is upright, so "left"
+        // joints take +perp — authored left limbs render on the viewer's left,
+        // matching the angle convention (-90° = viewer-left).
+        let leftShoulder = offset(shoulderCenter, perp, Self.shoulderHalfWidth)
+        let rightShoulder = offset(shoulderCenter, perp, -Self.shoulderHalfWidth)
+        let leftHip = offset(hipCenter, perp, Self.hipHalfWidth)
+        let rightHip = offset(hipCenter, perp, -Self.hipHalfWidth)
 
         let nose = Self.step(shoulderCenter, head, Self.headLength)
         let leftElbow = Self.step(leftShoulder, leftUpperArm, Self.upperArmLength)
@@ -70,10 +73,10 @@ struct PoseSpec: Sendable, Equatable {
         // Eyes/ears hug the nose; they are decorative and carry zero match weight.
         let headDir = Self.dir(head)
         let headPerp = CGVector(dx: headDir.dy, dy: -headDir.dx)
-        let leftEye = offset(Self.step(shoulderCenter, head, Self.headLength * 1.05), headPerp, -0.018)
-        let rightEye = offset(Self.step(shoulderCenter, head, Self.headLength * 1.05), headPerp, 0.018)
-        let leftEar = offset(Self.step(shoulderCenter, head, Self.headLength * 0.9), headPerp, -0.035)
-        let rightEar = offset(Self.step(shoulderCenter, head, Self.headLength * 0.9), headPerp, 0.035)
+        let leftEye = offset(Self.step(shoulderCenter, head, Self.headLength * 1.05), headPerp, 0.018)
+        let rightEye = offset(Self.step(shoulderCenter, head, Self.headLength * 1.05), headPerp, -0.018)
+        let leftEar = offset(Self.step(shoulderCenter, head, Self.headLength * 0.9), headPerp, 0.035)
+        let rightEar = offset(Self.step(shoulderCenter, head, Self.headLength * 0.9), headPerp, -0.035)
 
         var joints: [BodyJoint: JointPoint] = [:]
         let all: [(BodyJoint, CGPoint)] = [
