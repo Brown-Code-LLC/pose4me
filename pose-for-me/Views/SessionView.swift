@@ -317,7 +317,7 @@ struct SessionView: View {
             Spacer()
             Text("\(n)")
                 .font(.display(110, .heavy))
-                .foregroundStyle(Theme.brandGradient)
+                .foregroundStyle(Theme.accent)
                 .contentTransition(.numericText(countsDown: true))
                 .id(n)
                 .transition(.scale(scale: 1.6).combined(with: .opacity))
@@ -407,7 +407,7 @@ struct SessionView: View {
                 .stroke(Theme.track, lineWidth: 8)
             Circle()
                 .trim(from: 0, to: model.holdProgress)
-                .stroke(Theme.brandGradient,
+                .stroke(Theme.accent,
                         style: StrokeStyle(lineWidth: 8, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 0.12), value: model.holdProgress)
@@ -418,29 +418,36 @@ struct SessionView: View {
     }
 
     private var summary: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 0) {
             Spacer()
-            Image(systemName: "checkmark.seal.fill")
-                .font(.system(size: 84))
-                .foregroundStyle(Theme.brandGradient)
+            Image(systemName: "checkmark")
+                .font(.system(size: 26, weight: .bold))
+                .foregroundStyle(.white)
+                .frame(width: 64, height: 64)
+                .background(Theme.teal, in: Circle())
                 .symbolEffect(.bounce, value: model.stage)
 
-            Text("Stretch complete!")
-                .font(.appLargeTitle)
+            Text("Stretch complete")
+                .font(.appTitle)
                 .foregroundStyle(Theme.textPrimary)
+                .padding(.top, 22)
 
-            HStack(spacing: 14) {
+            Text("Circulation restarted. See you at the next one.")
+                .font(.appSubheadline)
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.top, 6)
+
+            HStack(spacing: 0) {
                 summaryStat(value: "\(Int(model.totalDuration))s", label: "Duration")
+                summaryHairline
                 if let avg = model.averageScore {
-                    summaryStat(value: "\(Int(avg * 100))%", label: "Form match")
+                    summaryStat(value: "\(Int(avg * 100))%", label: "Form")
+                    summaryHairline
                 }
                 summaryStat(value: model.exercise.category.rawValue, label: "Focus")
             }
-            .padding(.horizontal, 24)
-
-            Text("Blood is moving, spine is happy. See you next hour.")
-                .font(.appSubheadline)
-                .foregroundStyle(Theme.textSecondary)
+            .padding(.horizontal, 30)
+            .padding(.top, 34)
 
             Spacer()
 
@@ -457,17 +464,24 @@ struct SessionView: View {
         }
     }
 
+    private var summaryHairline: some View {
+        Rectangle()
+            .fill(Theme.cardStroke)
+            .frame(width: 1, height: 30)
+    }
+
     private func summaryStat(value: String, label: String) -> some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 3) {
             Text(value)
-                .font(.appTitle3)
+                .font(.display(20, .bold))
                 .foregroundStyle(Theme.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
             Text(label)
                 .font(.appCaption)
                 .foregroundStyle(Theme.textTertiary)
         }
         .frame(maxWidth: .infinity)
-        .card(padding: 12)
     }
 
     private func headerBar(showsTitle: Bool) -> some View {

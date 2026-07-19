@@ -60,9 +60,7 @@ struct StatsView: View {
 
     private var chartCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Last 14 days")
-                .font(.appHeadline)
-                .foregroundStyle(Theme.textPrimary)
+            Overline("Last 14 days")
 
             let data = sessionStore.dailyCounts(days: 14)
             Chart(data, id: \.day) { item in
@@ -70,7 +68,7 @@ struct StatsView: View {
                     x: .value("Day", item.day, unit: .day),
                     y: .value("Stretches", item.count)
                 )
-                .foregroundStyle(Theme.brandGradient)
+                .foregroundStyle(Theme.accent)
                 .cornerRadius(4)
             }
             .chartXAxis {
@@ -93,8 +91,9 @@ struct StatsView: View {
     private var proUpsell: some View {
         Button { showPaywall = true } label: {
             HStack {
-                Image(systemName: "sparkles")
-                    .foregroundStyle(Theme.warning)
+                Image(systemName: "lock.fill")
+                    .font(.appFootnote)
+                    .foregroundStyle(Theme.accent)
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Unlock full history & form scores")
                         .font(.body(15, .semibold))
@@ -114,9 +113,7 @@ struct StatsView: View {
 
     private var recentList: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Recent sessions")
-                .font(.appHeadline)
-                .foregroundStyle(Theme.textPrimary)
+            Overline("Recent sessions")
 
             let visible = entitlements.isPro
                 ? Array(sessionStore.records.suffix(30).reversed())

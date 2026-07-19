@@ -75,7 +75,7 @@ struct SettingsView: View {
                         Spacer()
                     }
                     if settings.data.activeStartMinutesFromMidnight > settings.data.activeEndMinutesFromMidnight {
-                        Text("🌙 Overnight window: \(windowTimeLabel(settings.data.activeStartHour, settings.data.activeStartMinute)) through \(windowTimeLabel(settings.data.activeEndHour, settings.data.activeEndMinute)) the next morning — active days refer to the night the shift starts.")
+                        Text("Overnight window: \(windowTimeLabel(settings.data.activeStartHour, settings.data.activeStartMinute)) through \(windowTimeLabel(settings.data.activeEndHour, settings.data.activeEndMinute)) the next morning. Active days refer to the night the shift starts.")
                             .font(.appCaption2)
                             .foregroundStyle(Theme.accent)
                     } else if settings.data.activeStartMinutesFromMidnight == settings.data.activeEndMinutesFromMidnight {
@@ -100,7 +100,7 @@ struct SettingsView: View {
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 9)
                                     .background(
-                                        Circle().fill(isOn ? AnyShapeStyle(Theme.brandGradient)
+                                        Circle().fill(isOn ? AnyShapeStyle(Theme.accent)
                                                            : AnyShapeStyle(Theme.tintFill))
                                     )
                                     .foregroundStyle(isOn ? .white : Theme.textSecondary)
@@ -177,7 +177,7 @@ struct SettingsView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 9)
                                 .background(
-                                    Capsule().fill(isOn ? AnyShapeStyle(Theme.brandGradient)
+                                    Capsule().fill(isOn ? AnyShapeStyle(Theme.accent)
                                                         : AnyShapeStyle(Theme.tintFill))
                                 )
                                 .foregroundStyle(isOn ? .white : Theme.textSecondary)
@@ -278,9 +278,9 @@ struct SettingsView: View {
     // MARK: Helpers
 
     private func sectionHeader(_ title: String, symbol: String) -> some View {
-        Label(title, systemImage: symbol)
-            .font(.appHeadline)
-            .foregroundStyle(Theme.textPrimary)
+        // Typographic section label; the symbol parameter is retained for call-site
+        // stability but icons are no longer part of the header language.
+        Overline(title)
     }
 
     private func settingLabel(_ title: String, detail: String?) -> some View {

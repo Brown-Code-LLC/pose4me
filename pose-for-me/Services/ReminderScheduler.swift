@@ -153,7 +153,7 @@ final class ReminderScheduler: NSObject, ObservableObject {
 
     func snooze(minutes: Int) async {
         let content = UNMutableNotificationContent()
-        content.title = "Snooze is over 😌"
+        content.title = "Snooze is over"
         content.body = "A quick stretch now beats a stiff back later."
         content.sound = .default
         content.categoryIdentifier = Self.categoryID
@@ -226,18 +226,18 @@ final class ReminderScheduler: NSObject, ObservableObject {
     }
 
     private static let titles = [
-        "Time to stretch 🧘",
-        "Your body called — it wants a minute",
-        "Circulation break!",
-        "Stand up, superstar ⭐️",
-        "60 seconds for future-you",
+        "Time to stretch",
+        "A minute for your body",
+        "Time to move",
+        "Stretch break",
+        "One minute, well spent",
     ]
     private static let bodies = [
-        "One minute of movement now keeps you sharp for the next hour.",
-        "Open the app and copy the pose — the camera does the counting.",
-        "Long sitting slows your blood flow. Let's fix that in 60 seconds.",
-        "A quick reach and a bend — your spine will thank you.",
-        "Your streak is watching 👀",
+        "One minute of movement keeps you sharp for the next hour.",
+        "Open the app and follow the pose — the camera counts the hold for you.",
+        "Sitting slows circulation. A sixty-second stretch restarts it.",
+        "A slow reach and a deep breath. Your back will notice.",
+        "Keep the streak alive — this one takes less than a minute.",
     ]
 }
 

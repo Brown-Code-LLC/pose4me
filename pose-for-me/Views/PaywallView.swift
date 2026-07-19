@@ -57,7 +57,7 @@ struct PaywallView: View {
 
             Text("Pose4Me Pro")
                 .font(.display(32, .heavy))
-                .foregroundStyle(Theme.brandGradient)
+                .foregroundStyle(Theme.accent)
             Text("Your body works all day. Give it a coach.")
                 .font(.appSubheadline)
                 .foregroundStyle(Theme.textSecondary)
@@ -82,7 +82,7 @@ struct PaywallView: View {
         HStack(spacing: 14) {
             Image(systemName: symbol)
                 .font(.title3)
-                .foregroundStyle(Theme.brandGradient)
+                .foregroundStyle(Theme.accent)
                 .frame(width: 34)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -97,7 +97,7 @@ struct PaywallView: View {
 
     private var planPicker: some View {
         HStack(spacing: 12) {
-            planCard(title: "Yearly", price: yearlyPrice, badge: "SAVE 52%",
+            planCard(title: "Yearly", price: yearlyPrice, badge: "Best value",
                      sub: "7-day free trial", isSelected: selectedYearly) {
                 selectedYearly = true
             }
@@ -116,12 +116,13 @@ struct PaywallView: View {
         } label: {
             VStack(spacing: 6) {
                 if let badge {
-                    Text(badge)
-                        .font(.body(10, .bold))
-                        .foregroundStyle(.white)
+                    Text(badge.uppercased())
+                        .font(.body(10, .semibold))
+                        .tracking(1.0)
+                        .foregroundStyle(Theme.accent)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Theme.warning, in: Capsule())
+                        .background(Theme.tintFill, in: Capsule())
                 }
                 Text(title)
                     .font(.appHeadline)
@@ -140,7 +141,7 @@ struct PaywallView: View {
                     .fill(Theme.card)
                     .overlay(
                         RoundedRectangle(cornerRadius: 18)
-                            .strokeBorder(isSelected ? AnyShapeStyle(Theme.brandGradient)
+                            .strokeBorder(isSelected ? AnyShapeStyle(Theme.accent)
                                                      : AnyShapeStyle(Theme.cardStroke),
                                           lineWidth: isSelected ? 2 : 1)
                     )
@@ -163,7 +164,7 @@ struct PaywallView: View {
             }
         } label: {
             if entitlements.purchaseInFlight {
-                ProgressView().tint(.black)
+                ProgressView().tint(.white)
             } else {
                 Text(selectedYearly ? "Start free trial" : "Subscribe")
             }

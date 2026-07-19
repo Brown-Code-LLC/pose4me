@@ -128,6 +128,25 @@ extension Font {
     static var appCaption2: Font { .body(11, .medium) }
 }
 
+/// Small-caps section label — the quiet typographic device that replaces
+/// icon-heavy section headers ("UP NEXT", "REMINDERS", "LAST 14 DAYS").
+struct Overline: View {
+    let text: String
+    var color: Color = Theme.textTertiary
+
+    init(_ text: String, color: Color = Theme.textTertiary) {
+        self.text = text
+        self.color = color
+    }
+
+    var body: some View {
+        Text(text.uppercased())
+            .font(.body(11, .semibold))
+            .tracking(1.4)
+            .foregroundStyle(color)
+    }
+}
+
 // MARK: - Backgrounds & containers
 
 /// Full-screen app background: quiet vertical gradient per theme spec.
@@ -152,7 +171,7 @@ struct CardStyle: ViewModifier {
                         RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
                             .strokeBorder(Theme.cardStroke, lineWidth: 1)
                     )
-                    .shadow(color: Color.black.opacity(0.05), radius: 6, y: 2)
+                    .shadow(color: Color.black.opacity(0.03), radius: 3, y: 1)
             )
     }
 }
@@ -175,7 +194,8 @@ extension View {
 
 // MARK: - Buttons
 
-/// Primary CTA: soft-mint -> teal gradient, 13pt radius, teal glow.
+/// Primary CTA: solid teal, 13pt radius. No gradient, no glow — the color and
+/// the type do the work.
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -185,17 +205,14 @@ struct PrimaryButtonStyle: ButtonStyle {
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: Theme.buttonRadius, style: .continuous)
-                    .fill(configuration.isPressed
-                          ? AnyShapeStyle(Theme.tealPressed)
-                          : AnyShapeStyle(Theme.brandGradient))
+                    .fill(configuration.isPressed ? Theme.tealPressed : Theme.teal)
             )
-            .shadow(color: Theme.ctaGlow, radius: 12, y: 5)
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
+            .opacity(configuration.isPressed ? 0.9 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 
-/// Secondary: tinted fill, no glow.
+/// Secondary: quiet tinted fill.
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
@@ -206,12 +223,8 @@ struct SecondaryButtonStyle: ButtonStyle {
             .background(
                 RoundedRectangle(cornerRadius: Theme.buttonRadius, style: .continuous)
                     .fill(Theme.tintFill)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Theme.buttonRadius, style: .continuous)
-                            .strokeBorder(Theme.cardStroke, lineWidth: 1)
-                    )
             )
-            .scaleEffect(configuration.isPressed ? 0.97 : 1)
-            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
+            .opacity(configuration.isPressed ? 0.8 : 1)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }

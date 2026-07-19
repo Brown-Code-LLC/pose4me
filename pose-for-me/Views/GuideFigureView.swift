@@ -69,7 +69,7 @@ struct GuideFigureView: View {
         MorphingSkeletonShape(from: fromPose, to: toPose, progress: progress)
             .stroke(Theme.brandGradient,
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
-            .shadow(color: glow ? Theme.accent.opacity(0.8) : .clear, radius: glow ? 10 : 0)
+            .shadow(color: glow ? Theme.accent.opacity(0.3) : .clear, radius: glow ? 6 : 0)
             .scaleEffect(breathe ? 1.02 : 0.99)
             .onAppear {
                 guard glow else { return }
@@ -134,17 +134,18 @@ struct ExercisePreviewPlayer: View {
                 GuideFigureView(spec: exercise.keyframes[index].spec)
                     .frame(maxWidth: .infinity)
 
-                Label("Demo", systemImage: "play.fill")
-                    .font(.body(11, .bold))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 10)
+                Text("DEMO")
+                    .font(.body(10, .semibold))
+                    .tracking(1.2)
+                    .foregroundStyle(Theme.accent)
+                    .padding(.horizontal, 9)
                     .padding(.vertical, 5)
-                    .background(Theme.accent, in: Capsule())
+                    .background(Theme.tintFill, in: Capsule())
             }
 
             Text(exercise.keyframes[index].cue)
-                .font(.appHeadline)
-                .foregroundStyle(Theme.accent)
+                .font(.display(16, .semibold))
+                .foregroundStyle(Theme.textPrimary)
                 .multilineTextAlignment(.center)
                 .contentTransition(.opacity)
                 .animation(.easeInOut(duration: 0.4), value: index)
@@ -176,8 +177,10 @@ struct PoseThumbnail: View {
     let spec: PoseSpec
 
     var body: some View {
+        // Thumbnails stay quiet: solid accent, no gradient — the gradient is
+        // reserved for the live coach figure.
         MorphingSkeletonShape(from: spec.keypoints(), to: spec.keypoints(), progress: 1)
-            .stroke(Theme.brandGradient,
+            .stroke(Theme.accent,
                     style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
     }
 }

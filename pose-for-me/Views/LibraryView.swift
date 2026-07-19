@@ -21,11 +21,14 @@ struct LibraryView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Library")
-                    .font(.appLargeTitle)
-                    .foregroundStyle(Theme.textPrimary)
-                    .padding(.top, 8)
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Overline("\(exercises.count) stretches")
+                    Text("Library")
+                        .font(.appLargeTitle)
+                        .foregroundStyle(Theme.textPrimary)
+                }
+                .padding(.top, 12)
 
                 categoryChips
 
@@ -35,19 +38,19 @@ struct LibraryView: View {
                     }
                 }
             }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 22)
+            .padding(.bottom, 28)
         }
     }
 
     private var categoryChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                chip(label: "All", symbol: "square.grid.2x2", isOn: selectedCategory == nil) {
+            HStack(spacing: 6) {
+                chip(label: "All", isOn: selectedCategory == nil) {
                     selectedCategory = nil
                 }
                 ForEach(ExerciseCategory.allCases) { category in
-                    chip(label: category.rawValue, symbol: category.symbol,
+                    chip(label: category.rawValue,
                          isOn: selectedCategory == category) {
                         selectedCategory = selectedCategory == category ? nil : category
                     }
@@ -56,19 +59,19 @@ struct LibraryView: View {
         }
     }
 
-    private func chip(label: String, symbol: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+    /// Text-only filter chips: selected = solid teal, unselected = quiet text.
+    private func chip(label: String, isOn: Bool, action: @escaping () -> Void) -> some View {
         Button {
             withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { action() }
             Haptics.tap()
         } label: {
-            Label(label, systemImage: symbol)
-                .font(.body(13, .medium))
-                .foregroundStyle(isOn ? .white : Theme.textPrimary)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 9)
+            Text(label)
+                .font(.body(13, isOn ? .semibold : .medium))
+                .foregroundStyle(isOn ? .white : Theme.textSecondary)
+                .padding(.horizontal, 13)
+                .padding(.vertical, 8)
                 .background(
-                    Capsule().fill(isOn ? AnyShapeStyle(Theme.brandGradient)
-                                        : AnyShapeStyle(Theme.card))
+                    Capsule().fill(isOn ? Theme.teal : Color.clear)
                 )
         }
     }

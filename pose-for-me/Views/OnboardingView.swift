@@ -68,9 +68,9 @@ struct OnboardingView: View {
 
             Text("Pose4Me")
                 .font(.display(38, .heavy))
-                .foregroundStyle(Theme.brandGradient)
+                .foregroundStyle(Theme.accent)
 
-            Text("Sitting is the new smoking.\nWe'll interrupt it — one 60-second stretch at a time.")
+            Text("Long days at a desk are hard on your body.\nPose4Me interrupts them — one guided minute at a time.")
                 .font(.appBody)
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
@@ -84,7 +84,7 @@ struct OnboardingView: View {
             Spacer()
             Image(systemName: "bell.and.waves.left.and.right.fill")
                 .font(.system(size: 60))
-                .foregroundStyle(Theme.brandGradient)
+                .foregroundStyle(Theme.accent)
 
             Text("Pick your rhythm")
                 .font(.appTitle)
@@ -131,7 +131,7 @@ struct OnboardingView: View {
                     .fill(Theme.card)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .strokeBorder(isOn ? AnyShapeStyle(Theme.brandGradient)
+                            .strokeBorder(isOn ? AnyShapeStyle(Theme.accent)
                                                : AnyShapeStyle(Theme.cardStroke),
                                           lineWidth: isOn ? 2 : 1)
                     )
@@ -145,7 +145,7 @@ struct OnboardingView: View {
             Spacer()
             Image(systemName: "camera.viewfinder")
                 .font(.system(size: 60))
-                .foregroundStyle(Theme.brandGradient)
+                .foregroundStyle(Theme.accent)
 
             Text("Your camera is your coach")
                 .font(.appTitle)
