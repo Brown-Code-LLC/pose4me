@@ -11,7 +11,7 @@ each 60-second stretch with on-device pose tracking. Built by Brown Code LLC.
 
 Questions, bug reports, or ideas? We'd love to hear from you.
 
-- Email: [kojobro67@gmail.com](mailto:kojobro67@gmail.com)
+- Email: [nicholas@browncode.dev](mailto:nicholas@browncode.dev)
 - Issues: [github.com/Brown-Code-LLC/pose4me/issues](https://github.com/Brown-Code-LLC/pose4me/issues)
 
 ## Privacy

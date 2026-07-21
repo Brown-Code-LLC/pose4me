@@ -39,4 +39,4 @@ If a future version of Pose4Me ever changes how data is handled, this policy wil
 
 ## Contact
 
-Questions? Contact Brown Code LLC at kojobro67@gmail.com.
+Questions? Contact Brown Code LLC at nicholas@browncode.dev.
