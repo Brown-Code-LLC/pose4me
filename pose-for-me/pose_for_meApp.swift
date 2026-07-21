@@ -13,7 +13,7 @@ struct pose_for_meApp: App {
     @StateObject private var settings = UserSettings()
     @StateObject private var sessionStore = SessionStore()
     @StateObject private var scheduler = ReminderScheduler()
-    @StateObject private var entitlements = Entitlements()
+    @StateObject private var tipJar = TipJar()
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -28,7 +28,7 @@ struct pose_for_meApp: App {
                 .environmentObject(settings)
                 .environmentObject(sessionStore)
                 .environmentObject(scheduler)
-                .environmentObject(entitlements)
+                .environmentObject(tipJar)
         }
         .onChange(of: scenePhase) { _, phase in
             // Non-destructive sync: tops up an exhausted chain but never resets a

@@ -5,8 +5,8 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var settings: UserSettings
     @EnvironmentObject private var scheduler: ReminderScheduler
-    @EnvironmentObject private var entitlements: Entitlements
-    @Binding var showPaywall: Bool
+    @EnvironmentObject private var tipJar: TipJar
+    @Binding var showTipJar: Bool
 
     private let weekdaySymbols = Calendar.current.veryShortWeekdaySymbols // Sun-first
 
@@ -253,24 +253,22 @@ struct SettingsView: View {
 
     private var aboutCard: some View {
         VStack(alignment: .leading, spacing: 14) {
-            sectionHeader("Pose4Me Pro", symbol: "sparkles")
-            if entitlements.isPro {
-                Label("Pro active — thanks for supporting Pose4Me!", systemImage: "checkmark.seal.fill")
-                    .font(.appSubheadline)
-                    .foregroundStyle(Theme.success)
-            } else {
-                Button("Upgrade to Pro") { showPaywall = true }
-                    .buttonStyle(PrimaryButtonStyle())
+            sectionHeader("Support", symbol: "cup.and.saucer.fill")
+            Text("Pose4Me is free for everyone. If it helps you feel better at your desk, you can buy me a coffee.")
+                .font(.appCaption)
+                .foregroundStyle(Theme.textSecondary)
+            Button {
+                showTipJar = true
+            } label: {
+                Label("Buy me a coffee", systemImage: "cup.and.saucer.fill")
             }
-            #if DEBUG
-            Toggle(isOn: Binding(
-                get: { entitlements.isPro },
-                set: { entitlements.setDevUnlock($0) }
-            )) {
-                settingLabel("Developer unlock (DEBUG only)", detail: nil)
+            .buttonStyle(SecondaryButtonStyle())
+            .accessibilityIdentifier("settings.tipJar")
+            if tipJar.totalTips > 0 {
+                Text("You\u{2019}ve bought \(tipJar.totalTips) coffee\(tipJar.totalTips == 1 ? "" : "s"). Thank you.")
+                    .font(.appCaption2)
+                    .foregroundStyle(Theme.accent)
             }
-            .tint(Theme.warning)
-            #endif
         }
         .card()
     }

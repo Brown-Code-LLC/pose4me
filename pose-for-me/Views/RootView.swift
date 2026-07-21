@@ -1,16 +1,15 @@
 import Combine
 import SwiftUI
 
-/// Main app shell: tab navigation + session/paywall presentation.
+/// Main app shell: tab navigation + session/tip-jar presentation.
 struct RootView: View {
     @EnvironmentObject private var settings: UserSettings
     @EnvironmentObject private var scheduler: ReminderScheduler
-    @EnvironmentObject private var entitlements: Entitlements
     @EnvironmentObject private var sessionStore: SessionStore
 
     @State private var tab: Tab = .home
     @State private var activeExercise: Exercise?
-    @State private var showPaywall = false
+    @State private var showTipJar = false
 
     enum Tab { case home, library, stats, settings }
 
@@ -19,13 +18,13 @@ struct RootView: View {
             screen { HomeView(activeExercise: $activeExercise) }
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }
                 .tag(Tab.home)
-            screen { LibraryView(activeExercise: $activeExercise, showPaywall: $showPaywall) }
+            screen { LibraryView(activeExercise: $activeExercise) }
                 .tabItem { Label("Library", systemImage: "square.grid.2x2.fill") }
                 .tag(Tab.library)
-            screen { StatsView(showPaywall: $showPaywall) }
+            screen { StatsView() }
                 .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
                 .tag(Tab.stats)
-            screen { SettingsView(showPaywall: $showPaywall) }
+            screen { SettingsView(showTipJar: $showTipJar) }
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
                 .tag(Tab.settings)
         }
@@ -33,14 +32,14 @@ struct RootView: View {
         .fullScreenCover(item: $activeExercise) { exercise in
             SessionView(exercise: exercise, settings: settings.data)
         }
-        .sheet(isPresented: $showPaywall) {
-            PaywallView()
+        .sheet(isPresented: $showTipJar) {
+            TipJarView()
         }
         .onChange(of: scheduler.pendingSessionRequest) { _, pending in
             // Notification tap -> straight into a stretch.
             guard pending else { return }
             scheduler.pendingSessionRequest = false
-            activeExercise = settings.suggestedExercise(isPro: entitlements.isPro)
+            activeExercise = settings.suggestedExercise()
         }
         .onChange(of: activeExercise == nil) { _, dismissed in
             // Non-destructive: completing a stretch resets the countdown from
@@ -52,7 +51,7 @@ struct RootView: View {
         .onOpenURL { url in
             // Widget/complication tap -> straight into a stretch.
             if url.scheme == "pose4me" {
-                activeExercise = settings.suggestedExercise(isPro: entitlements.isPro)
+                activeExercise = settings.suggestedExercise()
             }
         }
         .task {
@@ -69,7 +68,7 @@ struct RootView: View {
             default: break
             }
             if let id = UserDefaults.standard.string(forKey: "pose4me.autostart") {
-                activeExercise = Exercise.byID(id) ?? settings.suggestedExercise(isPro: true)
+                activeExercise = Exercise.byID(id) ?? settings.suggestedExercise()
             }
             #endif
         }

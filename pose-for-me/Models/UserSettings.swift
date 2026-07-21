@@ -115,11 +115,10 @@ final class UserSettings: ObservableObject {
         }
     }
 
-    /// Exercises that pass the user's filters (category, difficulty, seated, entitlement).
-    func eligibleExercises(isPro: Bool) -> [Exercise] {
+    /// Exercises that pass the user's filters (category, difficulty, seated).
+    func eligibleExercises() -> [Exercise] {
         Exercise.library.filter { ex in
-            (!ex.isPro || isPro)
-                && ex.difficulty.rawValue <= data.maxDifficulty
+            ex.difficulty.rawValue <= data.maxDifficulty
                 && enabledCategoriesSet.contains(ex.category)
                 && (!data.seatedFriendlyOnly || ex.seatedFriendly)
         }
@@ -139,8 +138,8 @@ final class UserSettings: ObservableObject {
     }
 
     /// Deterministic-but-rotating pick so the suggested stretch changes each hour.
-    func suggestedExercise(isPro: Bool) -> Exercise {
-        let pool = eligibleExercises(isPro: isPro)
+    func suggestedExercise() -> Exercise {
+        let pool = eligibleExercises()
         guard !pool.isEmpty else { return Exercise.library[0] }
         let hourStamp = Int(Date().timeIntervalSince1970 / 3600)
         return pool[hourStamp % pool.count]

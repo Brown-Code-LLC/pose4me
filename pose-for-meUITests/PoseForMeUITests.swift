@@ -11,7 +11,6 @@ final class PoseForMeUITests: XCTestCase {
 
     private func launch(_ extraArguments: [String] = [], skipOnboarding: Bool = true) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments += ["-pose4me.resetPro", "YES"]
         if skipOnboarding {
             app.launchArguments += ["-pose4me.skipOnboarding", "YES"]
         }
@@ -70,7 +69,7 @@ final class PoseForMeUITests: XCTestCase {
         ])
 
         // Intro is skipped by autobegin; countdown -> active -> summary.
-        let complete = app.staticTexts["Stretch complete!"]
+        let complete = app.staticTexts["Stretch complete"]
         XCTAssertTrue(complete.waitForExistence(timeout: 60),
                       "demo-mode session should finish on its own")
 
@@ -88,29 +87,42 @@ final class PoseForMeUITests: XCTestCase {
         let start = app.buttons["session.start"]
         XCTAssertTrue(start.waitForExistence(timeout: 6))
         // Without any tap, the demo timer should begin the session by itself.
-        let complete = app.staticTexts["Stretch complete!"]
+        let complete = app.staticTexts["Stretch complete"]
         XCTAssertTrue(complete.waitForExistence(timeout: 75),
                       "session should auto-start after the demo and complete")
     }
 
-    // MARK: Library & paywall
+    // MARK: Library & tip jar
 
-    func testLibraryShowsExercisesAndProLockOpensPaywall() {
+    func testLibraryOpensEveryExerciseFreely() {
         let app = launch()
 
         app.tabBars.buttons["Library"].tap()
         XCTAssertTrue(app.staticTexts["Overhead Reach"].waitForExistence(timeout: 5))
 
-        // Pro-locked exercise opens the paywall instead of a session.
+        // Formerly Pro-locked exercise now opens a session like any other.
         app.staticTexts["Torso Twist"].tap()
-        XCTAssertTrue(app.staticTexts["Pose4Me Pro"].waitForExistence(timeout: 5),
-                      "locked exercise should open the paywall")
-        app.buttons["paywall.close"].tap()
+        XCTAssertTrue(app.buttons["session.start"].waitForExistence(timeout: 5),
+                      "every exercise should open the session intro")
+        app.buttons["session.close"].tap()
 
-        // Free exercise opens the session intro.
         app.staticTexts["Overhead Reach"].tap()
         XCTAssertTrue(app.buttons["session.start"].waitForExistence(timeout: 5))
         app.buttons["session.close"].tap()
+    }
+
+    func testTipJarOpensFromSettings() {
+        let app = launch()
+
+        app.tabBars.buttons["Settings"].tap()
+        let tipButton = app.buttons["settings.tipJar"]
+        XCTAssertTrue(tipButton.waitForExistence(timeout: 5))
+        tipButton.tap()
+
+        XCTAssertTrue(app.staticTexts["Buy me a coffee"].waitForExistence(timeout: 5),
+                      "tip jar sheet should present")
+        app.buttons["tipjar.close"].tap()
+        XCTAssertTrue(tipButton.waitForExistence(timeout: 5), "back on settings")
     }
 
     // MARK: Tabs & settings
@@ -119,7 +131,8 @@ final class PoseForMeUITests: XCTestCase {
         let app = launch()
 
         app.tabBars.buttons["Progress"].tap()
-        XCTAssertTrue(app.staticTexts["Last 14 days"].waitForExistence(timeout: 5))
+        // Section headers render as uppercased Overline labels.
+        XCTAssertTrue(app.staticTexts["LAST 14 DAYS"].waitForExistence(timeout: 5))
 
         app.tabBars.buttons["Settings"].tap()
         XCTAssertTrue(app.staticTexts["Active hours"].waitForExistence(timeout: 5))

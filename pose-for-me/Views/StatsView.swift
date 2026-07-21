@@ -5,8 +5,6 @@ import Charts
 /// Progress dashboard: 14-day activity chart, streak and lifetime totals.
 struct StatsView: View {
     @EnvironmentObject private var sessionStore: SessionStore
-    @EnvironmentObject private var entitlements: Entitlements
-    @Binding var showPaywall: Bool
 
     var body: some View {
         ScrollView {
@@ -19,10 +17,6 @@ struct StatsView: View {
                 statRow
 
                 chartCard
-
-                if !entitlements.isPro {
-                    proUpsell
-                }
 
                 recentList
             }
@@ -88,36 +82,11 @@ struct StatsView: View {
         .card()
     }
 
-    private var proUpsell: some View {
-        Button { showPaywall = true } label: {
-            HStack {
-                Image(systemName: "lock.fill")
-                    .font(.appFootnote)
-                    .foregroundStyle(Theme.accent)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Unlock full history & form scores")
-                        .font(.body(15, .semibold))
-                        .foregroundStyle(Theme.textPrimary)
-                    Text("Pro keeps every session and tracks your form over time.")
-                        .font(.appCaption)
-                        .foregroundStyle(Theme.textSecondary)
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(Theme.textTertiary)
-            }
-        }
-        .buttonStyle(.plain)
-        .card()
-    }
-
     private var recentList: some View {
         VStack(alignment: .leading, spacing: 10) {
             Overline("Recent sessions")
 
-            let visible = entitlements.isPro
-                ? Array(sessionStore.records.suffix(30).reversed())
-                : Array(sessionStore.records.suffix(7).reversed())
+            let visible = Array(sessionStore.records.suffix(30).reversed())
 
             if visible.isEmpty {
                 Text("No sessions yet — your first stretch is one tap away.")

@@ -56,7 +56,6 @@ struct Exercise: Identifiable, Sendable {
     var category: ExerciseCategory
     var difficulty: Difficulty
     var seatedFriendly: Bool
-    var isPro: Bool
     var tracking: TrackingMode
     var benefit: String
     var instructions: String
@@ -86,7 +85,7 @@ extension Exercise {
         Exercise(
             id: "overhead-reach",
             name: "Overhead Reach",
-            category: .fullBody, difficulty: .gentle, seatedFriendly: true, isPro: false,
+            category: .fullBody, difficulty: .gentle, seatedFriendly: true,
             tracking: .camera,
             benefit: "Decompresses the spine and wakes up circulation after long sitting.",
             instructions: "Reach both arms straight overhead, palms up. Grow taller with every exhale.",
@@ -107,7 +106,7 @@ extension Exercise {
         Exercise(
             id: "neck-side-stretch",
             name: "Neck Side Stretch",
-            category: .neck, difficulty: .gentle, seatedFriendly: true, isPro: false,
+            category: .neck, difficulty: .gentle, seatedFriendly: true,
             tracking: .camera,
             benefit: "Releases tension that builds in the neck from looking at screens.",
             instructions: "Drop one ear toward the shoulder. Keep both shoulders heavy and relaxed.",
@@ -119,7 +118,7 @@ extension Exercise {
         Exercise(
             id: "chest-opener",
             name: "T-Pose Chest Opener",
-            category: .shoulders, difficulty: .gentle, seatedFriendly: true, isPro: false,
+            category: .shoulders, difficulty: .gentle, seatedFriendly: true,
             tracking: .camera,
             benefit: "Counteracts hunched posture and opens the chest for deeper breathing.",
             instructions: "Stretch your arms out wide like a T. Squeeze the shoulder blades together.",
@@ -135,7 +134,7 @@ extension Exercise {
         Exercise(
             id: "side-bend",
             name: "Standing Side Bend",
-            category: .back, difficulty: .moderate, seatedFriendly: true, isPro: false,
+            category: .back, difficulty: .moderate, seatedFriendly: true,
             tracking: .camera,
             benefit: "Stretches the obliques and the often-ignored side body.",
             instructions: "Arms overhead, then arc your whole torso to one side like a crescent moon.",
@@ -156,7 +155,7 @@ extension Exercise {
         Exercise(
             id: "forward-fold",
             name: "Forward Fold",
-            category: .back, difficulty: .moderate, seatedFriendly: false, isPro: false,
+            category: .back, difficulty: .moderate, seatedFriendly: false,
             tracking: .camera,
             benefit: "Lengthens hamstrings and lower back; flushes fresh blood to the brain.",
             instructions: "Hinge at the hips and let your upper body hang. Soft knees are welcome.",
@@ -174,7 +173,7 @@ extension Exercise {
         Exercise(
             id: "torso-twist",
             name: "Torso Twist",
-            category: .back, difficulty: .gentle, seatedFriendly: true, isPro: true,
+            category: .back, difficulty: .gentle, seatedFriendly: true,
             tracking: .camera,
             benefit: "Mobilizes the thoracic spine and massages the organs of digestion.",
             instructions: "Hands at shoulder height, rotate your ribcage side to side with control.",
@@ -195,7 +194,7 @@ extension Exercise {
         Exercise(
             id: "arm-circles",
             name: "Arm Circles",
-            category: .shoulders, difficulty: .energizing, seatedFriendly: true, isPro: true,
+            category: .shoulders, difficulty: .energizing, seatedFriendly: true,
             tracking: .camera,
             benefit: "Lubricates the shoulder joints and spikes circulation fast.",
             instructions: "Sweep both arms through big slow circles. Keep the movement smooth.",
@@ -217,7 +216,7 @@ extension Exercise {
         Exercise(
             id: "quad-stretch",
             name: "Standing Quad Stretch",
-            category: .legs, difficulty: .moderate, seatedFriendly: false, isPro: true,
+            category: .legs, difficulty: .moderate, seatedFriendly: false,
             tracking: .camera,
             benefit: "Opens the front of the thigh and hip flexors shortened by sitting.",
             instructions: "Catch one ankle behind you and press the hip forward. Hold something if you wobble.",
@@ -235,7 +234,7 @@ extension Exercise {
         Exercise(
             id: "hip-march",
             name: "Standing Hip Openers",
-            category: .legs, difficulty: .energizing, seatedFriendly: false, isPro: true,
+            category: .legs, difficulty: .energizing, seatedFriendly: false,
             tracking: .camera,
             benefit: "Fires up the hip flexors and gets blood moving through the legs.",
             instructions: "March one knee up to hip height at a time. Stand tall between lifts.",
@@ -250,7 +249,7 @@ extension Exercise {
         Exercise(
             id: "wrist-relief",
             name: "Wrist Flexor Relief",
-            category: .arms, difficulty: .gentle, seatedFriendly: true, isPro: true,
+            category: .arms, difficulty: .gentle, seatedFriendly: true,
             tracking: .timer,
             benefit: "Essential for anyone typing all day — helps prevent RSI.",
             instructions: "Extend one arm, palm up. Gently pull the fingers down and back with the other hand. Switch halfway.",
@@ -266,7 +265,7 @@ extension Exercise {
         Exercise(
             id: "calf-raises",
             name: "Calf Raise Pulses",
-            category: .legs, difficulty: .energizing, seatedFriendly: false, isPro: true,
+            category: .legs, difficulty: .energizing, seatedFriendly: false,
             tracking: .timer,
             benefit: "The calf is your 'second heart' — pulses pump blood back up the legs.",
             instructions: "Rise slowly onto your toes, pause, lower with control. Repeat until the timer ends.",
@@ -278,7 +277,7 @@ extension Exercise {
         Exercise(
             id: "shoulder-rolls",
             name: "Shoulder Rolls",
-            category: .shoulders, difficulty: .gentle, seatedFriendly: true, isPro: true,
+            category: .shoulders, difficulty: .gentle, seatedFriendly: true,
             tracking: .timer,
             benefit: "Melts the shrug tension that creeps in during deep-focus work.",
             instructions: "Roll the shoulders up, back and down in big slow circles. Reverse halfway.",
@@ -290,7 +289,7 @@ extension Exercise {
         Exercise(
             id: "cactus-arms",
             name: "Cactus Arms Hold",
-            category: .shoulders, difficulty: .gentle, seatedFriendly: true, isPro: false,
+            category: .shoulders, difficulty: .gentle, seatedFriendly: true,
             tracking: .camera,
             benefit: "Opens the chest and wakes up the upper back after hunching forward.",
             instructions: "Elbows out at shoulder height, forearms up like a cactus. Squeeze the shoulder blades together.",
@@ -306,7 +305,7 @@ extension Exercise {
         Exercise(
             id: "star-reach",
             name: "Star Reach",
-            category: .fullBody, difficulty: .energizing, seatedFriendly: false, isPro: false,
+            category: .fullBody, difficulty: .energizing, seatedFriendly: false,
             tracking: .camera,
             benefit: "A full-body wake-up: long lines from fingertips to heels boost circulation fast.",
             instructions: "Step wide and stretch into a big X — arms high and wide, legs strong.",
@@ -331,7 +330,7 @@ extension Exercise {
         Exercise(
             id: "triceps-stretch",
             name: "Overhead Triceps Stretch",
-            category: .arms, difficulty: .moderate, seatedFriendly: true, isPro: true,
+            category: .arms, difficulty: .moderate, seatedFriendly: true,
             tracking: .camera,
             benefit: "Lengthens the triceps and lats — relief for arms that type and scroll all day.",
             instructions: "Reach one arm up, drop the hand behind your head, and press the elbow gently with the other hand.",
@@ -347,7 +346,7 @@ extension Exercise {
         Exercise(
             id: "side-lunge",
             name: "Side Lunge Stretch",
-            category: .legs, difficulty: .moderate, seatedFriendly: false, isPro: true,
+            category: .legs, difficulty: .moderate, seatedFriendly: false,
             tracking: .camera,
             benefit: "Opens the inner thighs and hips — the muscles chairs forget exist.",
             instructions: "Step wide, bend into one knee and keep the other leg long. Chest stays proud.",
@@ -367,7 +366,7 @@ extension Exercise {
         Exercise(
             id: "gate-openers",
             name: "Gate Openers",
-            category: .legs, difficulty: .energizing, seatedFriendly: false, isPro: true,
+            category: .legs, difficulty: .energizing, seatedFriendly: false,
             tracking: .camera,
             benefit: "Circles the hip through its full range — instant relief for locked-up hips.",
             instructions: "Lift one knee to hip height, swing it out to the side like opening a gate, then set it down. Alternate.",
@@ -386,7 +385,7 @@ extension Exercise {
         Exercise(
             id: "standing-cat-cow",
             name: "Standing Cat-Cow",
-            category: .back, difficulty: .gentle, seatedFriendly: true, isPro: true,
+            category: .back, difficulty: .gentle, seatedFriendly: true,
             tracking: .timer,
             benefit: "Waves the spine through flexion and extension, feeding the discs between vertebrae.",
             instructions: "Hands on thighs. Inhale: arch the back and look up. Exhale: round the spine and tuck the chin. Flow with your breath.",
@@ -407,7 +406,7 @@ extension Exercise {
         Exercise(
             id: "eagle-arms",
             name: "Eagle Arm Wrap",
-            category: .shoulders, difficulty: .moderate, seatedFriendly: true, isPro: true,
+            category: .shoulders, difficulty: .moderate, seatedFriendly: true,
             tracking: .timer,
             benefit: "Stretches the deep muscles between the shoulder blades that nothing else reaches.",
             instructions: "Cross one arm under the other, wrap the forearms and lift the elbows to shoulder height. Switch the cross halfway.",
@@ -423,7 +422,7 @@ extension Exercise {
         Exercise(
             id: "ankle-mobility",
             name: "Ankle & Calf Mobility",
-            category: .legs, difficulty: .gentle, seatedFriendly: true, isPro: false,
+            category: .legs, difficulty: .gentle, seatedFriendly: true,
             tracking: .timer,
             benefit: "Pumps the calf and ankle — the return pumps that push blood back to your heart.",
             instructions: "Slow ankle circles each way, then gentle calf raises. Seated or standing both work.",
@@ -441,5 +440,4 @@ extension Exercise {
         library.first { $0.id == id }
     }
 
-    static var freeExercises: [Exercise] { library.filter { !$0.isPro } }
 }

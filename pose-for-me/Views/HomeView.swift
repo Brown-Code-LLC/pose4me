@@ -9,7 +9,6 @@ struct HomeView: View {
     @EnvironmentObject private var settings: UserSettings
     @EnvironmentObject private var sessionStore: SessionStore
     @EnvironmentObject private var scheduler: ReminderScheduler
-    @EnvironmentObject private var entitlements: Entitlements
 
     @Binding var activeExercise: Exercise?
 
@@ -135,7 +134,7 @@ struct HomeView: View {
 
     private var stretchNowButton: some View {
         Button {
-            activeExercise = settings.suggestedExercise(isPro: entitlements.isPro)
+            activeExercise = settings.suggestedExercise()
         } label: {
             Text("Stretch now")
         }
@@ -180,7 +179,7 @@ struct HomeView: View {
     // MARK: Up next — one clean row
 
     private var upNextRow: some View {
-        let exercise = settings.suggestedExercise(isPro: entitlements.isPro)
+        let exercise = settings.suggestedExercise()
         return VStack(alignment: .leading, spacing: 12) {
             Overline("Up next")
             Button {

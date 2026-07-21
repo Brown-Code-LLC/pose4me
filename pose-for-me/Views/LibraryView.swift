@@ -1,13 +1,11 @@
 import Combine
 import SwiftUI
 
-/// Browsable stretch library with category filters and Pro locks.
+/// Browsable stretch library with category filters. Everything is free.
 struct LibraryView: View {
     @EnvironmentObject private var settings: UserSettings
-    @EnvironmentObject private var entitlements: Entitlements
 
     @Binding var activeExercise: Exercise?
-    @Binding var showPaywall: Bool
 
     @State private var selectedCategory: ExerciseCategory?
 
@@ -77,29 +75,14 @@ struct LibraryView: View {
     }
 
     private func exerciseCard(_ exercise: Exercise) -> some View {
-        let locked = exercise.isPro && !entitlements.isPro
-        return Button {
-            if locked {
-                showPaywall = true
-            } else {
-                activeExercise = exercise
-            }
+        Button {
+            activeExercise = exercise
         } label: {
             VStack(alignment: .leading, spacing: 10) {
-                ZStack(alignment: .topTrailing) {
-                    PoseThumbnail(spec: exercise.keyframes[0].spec)
-                        .frame(height: 110)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 4)
-                        .opacity(locked ? 0.4 : 1)
-                    if locked {
-                        Image(systemName: "lock.fill")
-                            .font(.appCaption)
-                            .foregroundStyle(Theme.warning)
-                            .padding(7)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
-                }
+                PoseThumbnail(spec: exercise.keyframes[0].spec)
+                    .frame(height: 110)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
                 Text(exercise.name)
                     .font(.body(15, .semibold))
                     .foregroundStyle(Theme.textPrimary)

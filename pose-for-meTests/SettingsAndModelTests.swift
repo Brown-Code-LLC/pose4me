@@ -60,9 +60,9 @@ final class SettingsAndModelTests: XCTestCase {
         }
     }
 
-    func testFreeTierHasEnoughContent() {
-        XCTAssertGreaterThanOrEqual(Exercise.freeExercises.count, 3,
-            "free tier needs enough stretches to be usable")
+    func testLibraryIsFullyFree() {
+        // The whole library ships free; keep it substantial.
+        XCTAssertGreaterThanOrEqual(Exercise.library.count, 19)
     }
 
     func testFittedScalesToRequestedDuration() {
@@ -88,22 +88,19 @@ final class SettingsAndModelTests: XCTestCase {
         settings.data = SettingsData()
         settings.data.seatedFriendlyOnly = true
         settings.data.maxDifficulty = Difficulty.gentle.rawValue
-        let pool = settings.eligibleExercises(isPro: true)
+        let pool = settings.eligibleExercises()
         for ex in pool {
             XCTAssertTrue(ex.seatedFriendly)
             XCTAssertEqual(ex.difficulty, .gentle)
         }
         XCTAssertFalse(pool.isEmpty, "gentle seated stretches must exist")
-
-        let freePool = settings.eligibleExercises(isPro: false)
-        XCTAssertTrue(freePool.allSatisfy { !$0.isPro })
     }
 
     @MainActor
     func testSuggestedExerciseAlwaysReturnsSomething() {
         let settings = UserSettings()
         settings.data.enabledCategories = [] // pathological config
-        _ = settings.suggestedExercise(isPro: false) // must not crash
+        _ = settings.suggestedExercise() // must not crash
     }
 
     // MARK: Streaks
