@@ -60,7 +60,11 @@ struct RootView: View {
             await scheduler.refresh(settings: settings.data)
             #if DEBUG
             // UI-testing hooks: `-pose4me.autostart <id>` opens a session on launch,
-            // `-pose4me.tab <home|library|stats|settings>` selects a tab.
+            // `-pose4me.tab <home|library|stats|settings>` selects a tab,
+            // `-pose4me.showTipJar YES` presents the tip jar (IAP screenshots).
+            if UserDefaults.standard.bool(forKey: "pose4me.showTipJar") {
+                showTipJar = true
+            }
             switch UserDefaults.standard.string(forKey: "pose4me.tab") {
             case "library": tab = .library
             case "stats": tab = .stats

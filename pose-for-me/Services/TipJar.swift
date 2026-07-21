@@ -61,7 +61,17 @@ final class TipJar: ObservableObject {
         products.first { $0.id == tier.id }
     }
 
-    var storeConfigured: Bool { !products.isEmpty }
+    var storeConfigured: Bool { !products.isEmpty || displayPreview }
+
+    /// DEBUG screenshot aid (`-pose4me.mockStore YES`): renders tiers in their live
+    /// enabled style with fallback prices. Purchasing still requires real products.
+    var displayPreview: Bool {
+        #if DEBUG
+        UserDefaults.standard.bool(forKey: "pose4me.mockStore")
+        #else
+        false
+        #endif
+    }
 
     func tip(_ product: Product) async {
         purchaseInFlight = true

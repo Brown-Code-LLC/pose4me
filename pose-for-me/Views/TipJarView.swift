@@ -99,7 +99,8 @@ struct TipJarView: View {
                 } else {
                     Text(product?.displayPrice ?? tier.fallbackPrice)
                         .font(.display(15, .semibold))
-                        .foregroundStyle(product == nil ? Theme.textTertiary : Theme.accent)
+                        .foregroundStyle(product == nil && !tipJar.displayPreview
+                                         ? Theme.textTertiary : Theme.accent)
                 }
             }
             .padding(16)
@@ -107,7 +108,7 @@ struct TipJarView: View {
         .buttonStyle(.plain)
         .card(padding: 0)
         .disabled(product == nil || tipJar.purchaseInFlight)
-        .opacity(product == nil ? 0.65 : 1)
+        .opacity(product == nil && !tipJar.displayPreview ? 0.65 : 1)
     }
 
     private var thanks: some View {
