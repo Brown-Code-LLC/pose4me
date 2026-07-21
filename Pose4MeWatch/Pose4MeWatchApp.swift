@@ -5,7 +5,7 @@ import WidgetKit
 /// Receives the phone's countdown + stats via application context and stores them
 /// in the watch-side app group so the app UI and complications share one source.
 final class PhoneSyncReceiver: NSObject, WCSessionDelegate, ObservableObject {
-    static let appGroupID = "group.pose-for-me.shared"
+    static let appGroupID = "group.com.browncode.pose4me"
 
     @Published var nextFireDate: Date?
     @Published var streakDays = 0

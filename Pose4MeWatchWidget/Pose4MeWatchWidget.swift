@@ -8,7 +8,7 @@ struct WatchStretchEntry: TimelineEntry {
 }
 
 struct WatchStretchProvider: TimelineProvider {
-    static let appGroupID = "group.pose-for-me.shared"
+    static let appGroupID = "group.com.browncode.pose4me"
 
     func placeholder(in context: Context) -> WatchStretchEntry {
         WatchStretchEntry(date: .now, nextFire: .now.addingTimeInterval(1800), streakDays: 4)

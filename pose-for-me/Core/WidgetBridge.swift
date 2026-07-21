@@ -7,7 +7,7 @@ import WidgetKit
 /// Keys are read by Pose4MeWidget (iOS) and mirrored to the watch via
 /// WatchSyncService — keep them in sync with SharedState.swift in the widget target.
 enum WidgetBridge {
-    static let appGroupID = "group.pose-for-me.shared"
+    static let appGroupID = "group.com.browncode.pose4me"
 
     private static var defaults: UserDefaults? { UserDefaults(suiteName: appGroupID) }
 

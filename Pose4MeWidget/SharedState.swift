@@ -3,7 +3,7 @@ import Foundation
 /// Reads the state the app publishes through the shared app-group container.
 /// Mirror of WidgetBridge in the app target — keep keys in sync.
 struct SharedState {
-    static let appGroupID = "group.pose-for-me.shared"
+    static let appGroupID = "group.com.browncode.pose4me"
 
     var nextFireDate: Date?
     var streakDays: Int
