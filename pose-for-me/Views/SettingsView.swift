@@ -220,9 +220,6 @@ struct SettingsView: View {
                     .padding(.vertical, 6)
                     .background(Theme.tintFill, in: Capsule())
             }
-            Text("Drop yolo26n-pose.mlpackage into the project (see tools/export_yolo26_pose.py) to switch from Apple Vision to YOLO26.")
-                .font(.appCaption2)
-                .foregroundStyle(Theme.textTertiary)
         }
         .card()
     }
