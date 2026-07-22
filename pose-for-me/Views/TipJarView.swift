@@ -38,6 +38,20 @@ struct TipJarView: View {
                 .padding(.bottom, 30)
             }
         }
+        .task {
+            // Products can be slow to vend (sandbox especially) or may have failed
+            // at launch; re-fetch every time the jar opens, and keep retrying
+            // briefly while it's visible so tiers light up as soon as the store
+            // responds.
+            var attempts = 0
+            while !tipJar.storeConfigured && attempts < 5 && !Task.isCancelled {
+                await tipJar.loadProducts()
+                attempts += 1
+                if !tipJar.storeConfigured {
+                    try? await Task.sleep(for: .seconds(2))
+                }
+            }
+        }
     }
 
     private var content: some View {
@@ -69,7 +83,7 @@ struct TipJarView: View {
             .padding(.top, 28)
 
             if !tipJar.storeConfigured {
-                Text("Tipping goes live once the App Store listing is set up. Thanks for wanting to — that already means a lot.")
+                Text("Tips are temporarily unavailable — please check back in a moment.")
                     .font(.appCaption)
                     .foregroundStyle(Theme.textTertiary)
                     .multilineTextAlignment(.center)
