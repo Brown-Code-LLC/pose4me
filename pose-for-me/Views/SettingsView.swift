@@ -240,6 +240,11 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
             }
 
+            Toggle(isOn: $settings.data.voiceCuesEnabled) {
+                settingLabel("Voice guidance", detail: "Spoken cues during stretches, so you can follow without watching the screen")
+            }
+            .tint(Theme.accent)
+
             Toggle(isOn: $settings.data.hapticsEnabled) {
                 settingLabel("Haptics", detail: nil)
             }

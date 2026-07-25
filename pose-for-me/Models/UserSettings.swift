@@ -28,7 +28,7 @@ struct SettingsData: Codable, Equatable {
 
     // Feel
     var hapticsEnabled: Bool = true
-    var voiceCuesEnabled: Bool = false
+    var voiceCuesEnabled: Bool = true
     var appearance: String = "system"            // system / light / dark
 
     // Lifecycle

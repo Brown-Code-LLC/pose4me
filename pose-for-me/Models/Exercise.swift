@@ -116,19 +116,19 @@ extension Exercise {
             ]
         ),
         Exercise(
-            id: "chest-opener",
-            name: "T-Pose Chest Opener",
+            id: "cross-body-stretch",
+            name: "Cross-Body Shoulder Stretch",
             category: .shoulders, difficulty: .gentle, seatedFriendly: true,
             tracking: .camera,
-            benefit: "Counteracts hunched posture and opens the chest for deeper breathing.",
-            instructions: "Stretch your arms out wide like a T. Squeeze the shoulder blades together.",
+            benefit: "Releases the back of the shoulder — and fits fully in the camera frame.",
+            instructions: "Bring one arm straight across your chest and hug it closer with the other hand. Switch sides halfway.",
             keyframes: [
-                PoseKeyframe(spec: PoseSpec(leftUpperArm: -92, leftForearm: -90,
-                                            rightUpperArm: 92, rightForearm: 90),
-                             holdSeconds: 14, cue: "Arms wide, chest proud"),
-                PoseKeyframe(spec: PoseSpec(leftUpperArm: -120, leftForearm: -125,
-                                            rightUpperArm: 120, rightForearm: 125),
-                             holdSeconds: 10, cue: "Lift arms slightly higher"),
+                PoseKeyframe(spec: PoseSpec(leftUpperArm: -15, leftForearm: 120,
+                                            rightUpperArm: -75, rightForearm: -85),
+                             holdSeconds: 12, cue: "Right arm across your chest"),
+                PoseKeyframe(spec: PoseSpec(leftUpperArm: 75, leftForearm: 85,
+                                            rightUpperArm: 15, rightForearm: -120),
+                             holdSeconds: 12, cue: "Switch — left arm across"),
             ]
         ),
         Exercise(

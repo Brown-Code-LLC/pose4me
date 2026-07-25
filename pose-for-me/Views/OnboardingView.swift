@@ -12,7 +12,7 @@ struct OnboardingView: View {
     private static let demoSpecs: [PoseSpec] = [
         PoseSpec(),
         PoseSpec(leftUpperArm: -172, leftForearm: -176, rightUpperArm: 172, rightForearm: 176),
-        PoseSpec(leftUpperArm: -92, leftForearm: -90, rightUpperArm: 92, rightForearm: 90),
+        PoseSpec(leftUpperArm: -15, leftForearm: 120, rightUpperArm: -75, rightForearm: -85),
         PoseSpec(spine: 160, head: 152, leftUpperArm: -150, leftForearm: -155,
                  rightUpperArm: -175, rightForearm: -170),
     ]

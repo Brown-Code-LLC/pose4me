@@ -1,5 +1,6 @@
 import Combine
 import SwiftUI
+import UIKit
 
 /// Drives one stretch session: countdown -> per-keyframe tracking -> summary.
 @MainActor
@@ -23,6 +24,13 @@ final class SessionViewModel: ObservableObject {
     let strictness: Double
     /// Length of the animated movement demo on the intro screen (0 = off).
     let previewSeconds: Int
+    /// Whether cues are spoken aloud during the session.
+    let voiceEnabled: Bool
+
+    /// Tracks whether the coaching correction was already spoken for this keyframe.
+    private var spokeCoachingCue = false
+    /// Seconds spent failing the gate on the current keyframe (drives spoken help).
+    private var strugglingSeconds: Double = 0
 
     @Published var stage: Stage = .intro
     @Published var keyframeIndex = 0
@@ -69,10 +77,17 @@ final class SessionViewModel: ObservableObject {
             && cameraAvailable
         self.strictness = settings.matchStrictness
         self.previewSeconds = settings.previewSeconds
+        self.voiceEnabled = settings.voiceCuesEnabled
+    }
+
+    private func say(_ text: String) {
+        guard voiceEnabled else { return }
+        VoiceCoach.shared.speak(text)
     }
 
     func begin() {
         stage = .countdown(3)
+        say(usesCamera ? "Get in frame — whole body visible." : "Get ready.")
         Task { [weak self] in
             for n in [2, 1] {
                 try? await Task.sleep(for: .seconds(1))
@@ -90,6 +105,7 @@ final class SessionViewModel: ObservableObject {
         stage = .active
         startedAt = Date()
         Haptics.milestone()
+        say(currentKeyframe.cue)
         ticker = Task { [weak self] in
             let dt = 0.1
             while !Task.isCancelled {
@@ -126,6 +142,20 @@ final class SessionViewModel: ObservableObject {
             }
         }
 
+        // Spoken help: if the user has been off-target for a while, read the
+        // correction aloud once per keyframe.
+        if usesCamera {
+            if gate {
+                strugglingSeconds = 0
+            } else {
+                strugglingSeconds += dt
+                if strugglingSeconds > 5, !spokeCoachingCue, let cue = coachingCue {
+                    spokeCoachingCue = true
+                    say(cue)
+                }
+            }
+        }
+
         if gate {
             holdProgress += dt / currentKeyframe.holdSeconds
         }
@@ -139,12 +169,16 @@ final class SessionViewModel: ObservableObject {
         if keyframeIndex + 1 < keyframes.count {
             keyframeIndex += 1
             holdProgress = 0
+            spokeCoachingCue = false
+            strugglingSeconds = 0
             Haptics.success()
+            say(currentKeyframe.cue)
         } else {
             holdProgress = 1
             stage = .done
             ticker?.cancel()
             Haptics.milestone()
+            say("Stretch complete. Nice work.")
         }
     }
 
@@ -157,6 +191,7 @@ final class SessionViewModel: ObservableObject {
 
     func cancel() {
         ticker?.cancel()
+        VoiceCoach.shared.finish()
     }
 
     /// Synthetic body for simulator demos: target pose + smooth noise.
@@ -238,7 +273,13 @@ struct SessionView: View {
             }
             #endif
         }
+        .onAppear {
+            // Keep the screen awake for the whole session — the user is away from
+            // the phone mid-stretch and must not lose the camera to auto-lock.
+            UIApplication.shared.isIdleTimerDisabled = true
+        }
         .onDisappear {
+            UIApplication.shared.isIdleTimerDisabled = false
             model.cancel()
             camera.stop()
         }
