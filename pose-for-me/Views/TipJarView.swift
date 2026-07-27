@@ -108,7 +108,8 @@ struct TipJarView: View {
                     .font(.appHeadline)
                     .foregroundStyle(Theme.textPrimary)
                 Spacer()
-                if tipJar.purchaseInFlight {
+                // Only the tapped tier spins; the others just dim while it runs.
+                if let product, tipJar.isPurchasing(product) {
                     ProgressView().tint(Theme.accent)
                 } else {
                     Text(product?.displayPrice ?? tier.fallbackPrice)
@@ -122,7 +123,8 @@ struct TipJarView: View {
         .buttonStyle(.plain)
         .card(padding: 0)
         .disabled(product == nil || tipJar.purchaseInFlight)
-        .opacity(product == nil && !tipJar.displayPreview ? 0.65 : 1)
+        .opacity(product == nil && !tipJar.displayPreview ? 0.65
+                 : (tipJar.purchaseInFlight && !(product.map(tipJar.isPurchasing) ?? false) ? 0.5 : 1))
     }
 
     private var thanks: some View {

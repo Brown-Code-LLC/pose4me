@@ -25,9 +25,19 @@ final class TipJar: ObservableObject {
     ]
 
     @Published private(set) var products: [Product] = []
-    @Published private(set) var purchaseInFlight = false
+    /// The product currently being purchased, if any — so only its row shows a
+    /// spinner rather than all three.
+    @Published private(set) var purchasingProductID: String?
     /// Set briefly after a successful tip so the UI can say thanks.
     @Published var justTipped = false
+
+    /// Whether any purchase is in flight (disables the other tiers while one runs).
+    var purchaseInFlight: Bool { purchasingProductID != nil }
+
+    /// Whether this specific product's purchase is running.
+    func isPurchasing(_ product: Product) -> Bool {
+        purchasingProductID == product.id
+    }
 
     /// Lifetime count of coffees bought, persisted for a quiet thank-you in Settings.
     @Published private(set) var totalTips: Int
@@ -74,8 +84,8 @@ final class TipJar: ObservableObject {
     }
 
     func tip(_ product: Product) async {
-        purchaseInFlight = true
-        defer { purchaseInFlight = false }
+        purchasingProductID = product.id
+        defer { purchasingProductID = nil }
         guard let result = try? await product.purchase() else { return }
         if case .success(let verification) = result,
            let transaction = try? verification.payloadValue {
