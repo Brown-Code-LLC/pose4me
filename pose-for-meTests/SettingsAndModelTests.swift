@@ -103,6 +103,60 @@ final class SettingsAndModelTests: XCTestCase {
         _ = settings.suggestedExercise() // must not crash
     }
 
+    @MainActor
+    func testSuggestedExerciseSkipsRecentlyDone() {
+        let settings = UserSettings()
+        settings.data = SettingsData()
+        let recent = ["overhead-reach", "neck-side-stretch", "cross-body-stretch"]
+        let history = recent.map {
+            SessionRecord(exerciseID: $0, date: Date(), durationSeconds: 60, averageMatchScore: nil)
+        }
+        let pick = settings.suggestedExercise(history: history)
+        XCTAssertFalse(recent.contains(pick.id),
+                       "the last three stretches must not be suggested again")
+    }
+
+    @MainActor
+    func testSuggestedExerciseFavorsNeglectedCategory() {
+        let settings = UserSettings()
+        settings.data = SettingsData()
+        // One session today in every category except Legs & Hips.
+        let done = ["neck-side-stretch", "cross-body-stretch", "torso-twist",
+                    "wrist-relief", "overhead-reach"]
+        let history = done.map {
+            SessionRecord(exerciseID: $0, date: Date(), durationSeconds: 60, averageMatchScore: nil)
+        }
+        let pick = settings.suggestedExercise(history: history)
+        XCTAssertEqual(pick.category, .legs,
+                       "the only never-stretched category should win")
+    }
+
+    // MARK: Routines
+
+    @MainActor
+    func testRoutineLibraryReferencesOnlyRealExercises() {
+        for routine in Routine.library {
+            XCTAssertGreaterThanOrEqual(routine.exerciseIDs.count, 2)
+            XCTAssertEqual(Set(routine.exerciseIDs).count, routine.exerciseIDs.count,
+                           "\(routine.name) repeats an exercise")
+            for id in routine.exerciseIDs {
+                XCTAssertNotNil(Exercise.byID(id),
+                                "\(routine.name) references unknown exercise \(id)")
+            }
+        }
+    }
+
+    @MainActor
+    func testEligibleExercisesInRoutineRespectsFilters() {
+        let settings = UserSettings()
+        settings.data = SettingsData()
+        settings.data.seatedFriendlyOnly = true
+        let deskBreak = Routine.byID("desk-break")!
+        let pool = settings.eligibleExercises(in: deskBreak)
+        XCTAssertFalse(pool.isEmpty, "the desk break must survive seated-only mode")
+        for ex in pool { XCTAssertTrue(ex.seatedFriendly) }
+    }
+
     // MARK: Streaks
 
     @MainActor
@@ -141,6 +195,81 @@ final class SettingsAndModelTests: XCTestCase {
                                    durationSeconds: 60, averageMatchScore: nil)
         let store = SessionStore(testRecords: [record])
         XCTAssertEqual(store.streakDays, 0)
+    }
+
+    @MainActor
+    func testStreakShieldCoversSingleMissedDay() {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let dayBeforeYesterday = cal.date(byAdding: .day, value: -2, to: today)!
+        // 7 sessions earn one shield; yesterday is missed; the shield bridges it.
+        var records = (0..<7).map { i in
+            SessionRecord(exerciseID: "overhead-reach",
+                          date: dayBeforeYesterday.addingTimeInterval(3600 + Double(i) * 600),
+                          durationSeconds: 60, averageMatchScore: nil)
+        }
+        records.append(SessionRecord(exerciseID: "overhead-reach",
+                                     date: today.addingTimeInterval(3600),
+                                     durationSeconds: 60, averageMatchScore: nil))
+        let store = SessionStore(testRecords: records)
+        XCTAssertEqual(store.streakDays, 3, "today + covered day + session day")
+        XCTAssertEqual(store.streakShields, 0, "the shield was spent on the gap")
+    }
+
+    @MainActor
+    func testWithoutShieldsGapStillBreaksStreak() {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let dayBeforeYesterday = cal.date(byAdding: .day, value: -2, to: today)!
+        // Only 6 sessions: no shield earned, so the missed day breaks the streak.
+        var records = (0..<5).map { i in
+            SessionRecord(exerciseID: "overhead-reach",
+                          date: dayBeforeYesterday.addingTimeInterval(3600 + Double(i) * 600),
+                          durationSeconds: 60, averageMatchScore: nil)
+        }
+        records.append(SessionRecord(exerciseID: "overhead-reach",
+                                     date: today.addingTimeInterval(3600),
+                                     durationSeconds: 60, averageMatchScore: nil))
+        let store = SessionStore(testRecords: records)
+        XCTAssertEqual(store.streakDays, 1)
+        XCTAssertEqual(store.streakShields, 0)
+    }
+
+    @MainActor
+    func testShieldsNeverInventStreakDaysBeforeFirstSession() {
+        // 7 sessions today earn a shield, but there is no earlier history for
+        // it to bridge — the streak must stay at 1 and the shield stays held.
+        let records = (0..<7).map { i in
+            SessionRecord(exerciseID: "overhead-reach",
+                          date: Calendar.current.startOfDay(for: Date())
+                                .addingTimeInterval(3600 + Double(i) * 600),
+                          durationSeconds: 60, averageMatchScore: nil)
+        }
+        let store = SessionStore(testRecords: records)
+        XCTAssertEqual(store.streakDays, 1)
+        XCTAssertEqual(store.streakShields, 1)
+    }
+
+    @MainActor
+    func testCategoryAndExerciseTotals() {
+        let store = SessionStore(testRecords: [
+            SessionRecord(exerciseID: "overhead-reach", date: Date(),
+                          durationSeconds: 60, averageMatchScore: 0.7),
+            SessionRecord(exerciseID: "overhead-reach", date: Date(),
+                          durationSeconds: 60, averageMatchScore: 0.9),
+            SessionRecord(exerciseID: "neck-side-stretch", date: Date(),
+                          durationSeconds: 30, averageMatchScore: nil),
+        ])
+        let categories = store.categoryTotals()
+        XCTAssertEqual(categories.first?.category, .fullBody)
+        XCTAssertEqual(categories.first?.count, 2)
+        XCTAssertEqual(categories.first?.minutes ?? 0, 2.0, accuracy: 0.01)
+
+        let exercises = store.exerciseTotals()
+        XCTAssertEqual(exercises.first?.exercise.id, "overhead-reach")
+        XCTAssertEqual(exercises.first?.count, 2)
+        XCTAssertEqual(exercises.first?.bestForm ?? 0, 0.9, accuracy: 0.001)
+        XCTAssertNil(exercises.last?.bestForm, "timer-only exercise has no form score")
     }
 
     @MainActor

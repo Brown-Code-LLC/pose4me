@@ -9,13 +9,14 @@ struct RootView: View {
 
     @State private var tab: Tab = .home
     @State private var activeExercise: Exercise?
+    @State private var activeRoutine: Routine?
     @State private var showTipJar = false
 
     enum Tab { case home, library, stats, settings }
 
     var body: some View {
         TabView(selection: $tab) {
-            screen { HomeView(activeExercise: $activeExercise) }
+            screen { HomeView(activeExercise: $activeExercise, activeRoutine: $activeRoutine) }
                 .tabItem { Label("Today", systemImage: "sun.max.fill") }
                 .tag(Tab.home)
             screen { LibraryView(activeExercise: $activeExercise) }
@@ -32,6 +33,9 @@ struct RootView: View {
         .fullScreenCover(item: $activeExercise) { exercise in
             SessionView(exercise: exercise, settings: settings.data)
         }
+        .fullScreenCover(item: $activeRoutine) { routine in
+            RoutineSessionView(routine: routine)
+        }
         .sheet(isPresented: $showTipJar) {
             TipJarView()
         }
@@ -39,9 +43,9 @@ struct RootView: View {
             // Notification tap -> straight into a stretch.
             guard pending else { return }
             scheduler.pendingSessionRequest = false
-            activeExercise = settings.suggestedExercise()
+            activeExercise = settings.suggestedExercise(history: sessionStore.records)
         }
-        .onChange(of: activeExercise == nil) { _, dismissed in
+        .onChange(of: activeExercise == nil && activeRoutine == nil) { _, dismissed in
             // Non-destructive: completing a stretch resets the countdown from
             // SessionView's Done button; merely closing the sheet must not.
             if dismissed {
@@ -51,7 +55,7 @@ struct RootView: View {
         .onOpenURL { url in
             // Widget/complication tap -> straight into a stretch.
             if url.scheme == "pose4me" {
-                activeExercise = settings.suggestedExercise()
+                activeExercise = settings.suggestedExercise(history: sessionStore.records)
             }
         }
         .task {
@@ -72,7 +76,11 @@ struct RootView: View {
             default: break
             }
             if let id = UserDefaults.standard.string(forKey: "pose4me.autostart") {
-                activeExercise = Exercise.byID(id) ?? settings.suggestedExercise()
+                activeExercise = Exercise.byID(id) ?? settings.suggestedExercise(history: sessionStore.records)
+            }
+            // `-pose4me.routine <id>` opens a routine on launch.
+            if let id = UserDefaults.standard.string(forKey: "pose4me.routine") {
+                activeRoutine = Routine.byID(id)
             }
             #endif
         }

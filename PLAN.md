@@ -11,9 +11,10 @@ until the stretch is complete.
 ```
 pose-for-me/                    (app target — file-system synchronized group)
 ├── App/          pose_for_meApp.swift, RootView (tab shell), Onboarding gate
-├── Core/         Theme (design system), Haptics
-├── Models/       Exercise + PoseSpec keyframes (forward-kinematics builder),
-│                 UserSettings (every feature customizable), SessionStore (history/streaks)
+├── Core/         Theme (design system), Haptics, WidgetBridge
+├── Models/       Exercise + PoseSpec keyframes (forward-kinematics builder), Routine
+│                 (curated multi-stretch breaks), UserSettings (every feature
+│                 customizable), SessionStore (history/streaks/shields)
 ├── Services/
 │   ├── CameraManager          AVCaptureSession, front camera, frame stream
 │   ├── PoseEstimator          protocol + BodyPose (17 COCO keypoints)
@@ -21,9 +22,13 @@ pose-for-me/                    (app target — file-system synchronized group)
 │   ├── VisionPoseEstimator    VNDetectHumanBodyPoseRequest — always-available fallback
 │   ├── PoseMatcher            joint-angle scoring: detected pose vs. target keyframe
 │   ├── ReminderScheduler      UNUserNotificationCenter, interval/active-hours/days
-│   └── Entitlements           Pro subscription (StoreKit 2 + graceful mock in dev)
-└── Views/        Home (countdown ring), Session (camera + overlay + guide),
-                  Library, Stats (Swift Charts), Settings, Paywall
+│   ├── VoiceCoach             AVSpeechSynthesizer spoken cues + corrections
+│   ├── WatchSyncService       WCSession application-context push to the watch
+│   └── TipJar                 StoreKit 2 tip jar (three consumables)
+└── Views/        Home (countdown ring + routines), Session (camera + overlay + guide),
+                  RoutineSession (chained stretches), Library, Stats (Swift Charts),
+                  Settings, TipJar
+Pose4MeWidget/    iOS widgets · Pose4MeWatch/ + Pose4MeWatchWidget/  watchOS companion
 tools/            export_yolo26_pose.py — Ultralytics → CoreML export
 ```
 
@@ -54,22 +59,26 @@ drop the `.mlpackage` into the app folder. The app auto-detects it at launch.
 - Reminder style: standard / time-sensitive, snooze length
 - Camera tracking on/off (timer-only fallback), match strictness, haptics/sound
 
-## 4. Monetization (SaaS)
+## 4. Monetization
 
-Free: 5 core stretches, 1 daily schedule, 7-day history.
-Pro ($6.99/mo, $39.99/yr, 7-day trial): full library, custom routines, multiple schedules,
-unlimited stats, strict-form coaching. StoreKit 2 in `Entitlements.swift`; product IDs are
-placeholders until App Store Connect is configured — a dev toggle unlocks Pro locally.
+Shipped model: **fully free app, tip jar only.** No paywall, no subscription, no locked
+content. `TipJar.swift` + `TipJarView.swift` sell three StoreKit 2 consumables
+(`pose4me.tip.espresso` $1.99 / `.latte` $4.99 / `.carafe` $9.99), live in App Store
+Connect since 1.0. The earlier Pro-subscription plan was dropped before launch.
 
-## 5. Path to scale (post-prototype roadmap)
+## 5. Roadmap
 
-1. **v1.0 ship:** real StoreKit products, App Store review assets, watchOS reminder mirror.
-2. **Retention:** streak freezes, weekly recap notifications, share cards.
-3. **B2B SaaS wedge:** team/corporate-wellness dashboards (companies pay per seat — this is
-   where the real SaaS revenue is), Slack/Teams integration for desk workers.
+Shipped: v1.0 (App Store, July 2026), 1.1 (voice guidance, always-on screen), routines,
+streak shields, smarter suggestions, per-category stats.
+
+1. **Retention:** weekly recap notifications + share cards, Live Activity during
+   sessions, interactive "Start stretch" widget (App Intents / Siri).
+2. **Data safety:** iCloud backup of session history (streaks survive a new phone).
+3. **Watch:** run timer-tracked stretches directly on the wrist with haptic cues.
 4. **Model quality:** YOLO26-pose fine-tuned on stretch poses; 3D lift (depth from
    TrueDepth) for form scoring; rep counting for dynamic moves.
-5. **Platform:** Android (same YOLO26 → TFLite), HealthKit (stand hours, mindful minutes).
+5. **Platform:** HealthKit (mindful minutes/workouts); possibly Android
+   (same YOLO26 → TFLite).
 
 ## 6. Verification
 

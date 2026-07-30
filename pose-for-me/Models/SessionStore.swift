@@ -75,25 +75,88 @@ final class SessionStore: ObservableObject {
     }
 
     /// Consecutive days (ending today or yesterday) with at least one session.
-    var streakDays: Int {
+    /// Streak shields bridge fully missed days — see `streakAccounting`.
+    var streakDays: Int { streakAccounting().streak }
+
+    /// Shields currently held (earned minus those spent inside the current streak).
+    var streakShields: Int { streakAccounting().shields }
+
+    /// One shield per `sessionsPerShield` completed stretches, held up to
+    /// `maxShields`. A shield is spent automatically when a day inside the
+    /// current streak has no sessions, so one busy day doesn't erase the streak.
+    static let sessionsPerShield = 7
+    static let maxShields = 3
+
+    /// Walks backward from today; missed days consume shields until none remain.
+    /// Derived entirely from `records`, so it needs no extra persisted state.
+    private func streakAccounting() -> (streak: Int, shields: Int) {
         let calendar = Calendar.current
         let days = Set(records.map { calendar.startOfDay(for: $0.date) })
-        guard !days.isEmpty else { return 0 }
+        var shields = min(Self.maxShields, records.count / Self.sessionsPerShield)
+        guard let earliest = days.min() else { return (0, shields) }
 
         var cursor = calendar.startOfDay(for: Date())
         if !days.contains(cursor) {
-            // Streak survives until the end of today; start counting from yesterday.
-            guard let yesterday = calendar.date(byAdding: .day, value: -1, to: cursor),
-                  days.contains(yesterday) else { return 0 }
+            // Today never costs a shield: the streak survives until midnight.
+            guard let yesterday = calendar.date(byAdding: .day, value: -1, to: cursor) else {
+                return (0, shields)
+            }
             cursor = yesterday
         }
         var streak = 0
-        while days.contains(cursor) {
-            streak += 1
+        while cursor >= earliest {
+            if days.contains(cursor) {
+                streak += 1
+            } else if shields > 0 {
+                shields -= 1
+                streak += 1
+            } else {
+                break
+            }
             guard let previous = calendar.date(byAdding: .day, value: -1, to: cursor) else { break }
             cursor = previous
         }
-        return streak
+        return (streak, shields)
+    }
+
+    /// Lifetime sessions and minutes per category, most-stretched first.
+    func categoryTotals() -> [(category: ExerciseCategory, count: Int, minutes: Double)] {
+        var buckets: [ExerciseCategory: (count: Int, seconds: Double)] = [:]
+        for record in records {
+            guard let category = record.exercise?.category else { continue }
+            var bucket = buckets[category] ?? (0, 0)
+            bucket.count += 1
+            bucket.seconds += record.durationSeconds
+            buckets[category] = bucket
+        }
+        return buckets
+            .map { (category: $0.key, count: $0.value.count, minutes: $0.value.seconds / 60) }
+            .sorted {
+                $0.count == $1.count ? $0.category.rawValue < $1.category.rawValue
+                                     : $0.count > $1.count
+            }
+    }
+
+    /// Most-stretched exercises with each one's best form score, most first.
+    func exerciseTotals() -> [(exercise: Exercise, count: Int, bestForm: Double?)] {
+        var buckets: [String: (count: Int, best: Double?)] = [:]
+        for record in records {
+            var bucket = buckets[record.exerciseID] ?? (0, nil)
+            bucket.count += 1
+            if let score = record.averageMatchScore {
+                bucket.best = max(bucket.best ?? 0, score)
+            }
+            buckets[record.exerciseID] = bucket
+        }
+        return buckets
+            .compactMap { id, value -> (exercise: Exercise, count: Int, bestForm: Double?)? in
+                guard let exercise = Exercise.byID(id) else { return nil }
+                return (exercise: exercise, count: value.count, bestForm: value.best)
+            }
+            .sorted {
+                $0.count == $1.count ? $0.exercise.name < $1.exercise.name
+                                     : $0.count > $1.count
+            }
     }
 
     /// Sessions-per-day for the last `days` days (oldest first), for the stats chart.

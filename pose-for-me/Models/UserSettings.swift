@@ -117,11 +117,18 @@ final class UserSettings: ObservableObject {
 
     /// Exercises that pass the user's filters (category, difficulty, seated).
     func eligibleExercises() -> [Exercise] {
-        Exercise.library.filter { ex in
-            ex.difficulty.rawValue <= data.maxDifficulty
-                && enabledCategoriesSet.contains(ex.category)
-                && (!data.seatedFriendlyOnly || ex.seatedFriendly)
-        }
+        Exercise.library.filter { isEligible($0) }
+    }
+
+    /// The routine's stretches that pass the same filters, in routine order.
+    func eligibleExercises(in routine: Routine) -> [Exercise] {
+        routine.exercises.filter { isEligible($0) }
+    }
+
+    private func isEligible(_ ex: Exercise) -> Bool {
+        ex.difficulty.rawValue <= data.maxDifficulty
+            && enabledCategoriesSet.contains(ex.category)
+            && (!data.seatedFriendlyOnly || ex.seatedFriendly)
     }
 
     var enabledCategoriesSet: Set<ExerciseCategory> {
@@ -138,10 +145,27 @@ final class UserSettings: ObservableObject {
     }
 
     /// Deterministic-but-rotating pick so the suggested stretch changes each hour.
-    func suggestedExercise() -> Exercise {
+    /// History-aware: skips the stretches done most recently and favors the
+    /// category that has waited longest since its last session.
+    func suggestedExercise(history: [SessionRecord] = []) -> Exercise {
         let pool = eligibleExercises()
         guard !pool.isEmpty else { return Exercise.library[0] }
+
+        let recentIDs = Set(history.suffix(3).map(\.exerciseID))
+        var candidates = pool.filter { !recentIDs.contains($0.id) }
+        if candidates.isEmpty { candidates = pool }
+
+        var lastStretched: [ExerciseCategory: Date] = [:]
+        for record in history {
+            guard let category = record.exercise?.category else { continue }
+            lastStretched[category] = max(lastStretched[category] ?? .distantPast, record.date)
+        }
+        func waited(_ ex: Exercise) -> Date { lastStretched[ex.category] ?? .distantPast }
+        if let oldest = candidates.map(waited).min() {
+            candidates = candidates.filter { waited($0) == oldest }
+        }
+
         let hourStamp = Int(Date().timeIntervalSince1970 / 3600)
-        return pool[hourStamp % pool.count]
+        return candidates[hourStamp % candidates.count]
     }
 }

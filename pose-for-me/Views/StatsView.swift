@@ -16,7 +16,13 @@ struct StatsView: View {
 
                 statRow
 
+                shieldRow
+
                 chartCard
+
+                categoryCard
+
+                personalBestsCard
 
                 recentList
             }
@@ -50,6 +56,96 @@ struct StatsView: View {
         }
         .frame(maxWidth: .infinity)
         .card(padding: 14)
+    }
+
+    private var shieldRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "shield.fill")
+                .foregroundStyle(Theme.accent)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("\(sessionStore.streakShields) streak shield\(sessionStore.streakShields == 1 ? "" : "s")")
+                    .font(.body(14, .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Text("Earn one every \(SessionStore.sessionsPerShield) stretches — a shield auto-covers a missed day.")
+                    .font(.appCaption2)
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            Spacer()
+        }
+        .card(padding: 14)
+    }
+
+    private var categoryCard: some View {
+        let totals = sessionStore.categoryTotals()
+        let maxCount = totals.first?.count ?? 1
+        return Group {
+            if !totals.isEmpty {
+                VStack(alignment: .leading, spacing: 14) {
+                    Overline("By focus area")
+                    ForEach(totals, id: \.category) { item in
+                        VStack(alignment: .leading, spacing: 5) {
+                            HStack {
+                                Image(systemName: item.category.symbol)
+                                    .font(.appCaption)
+                                    .foregroundStyle(Theme.accent)
+                                    .frame(width: 22)
+                                Text(item.category.rawValue)
+                                    .font(.body(14, .medium))
+                                    .foregroundStyle(Theme.textPrimary)
+                                Spacer()
+                                Text("\(item.count) · \(Int(item.minutes.rounded())) min")
+                                    .font(.appCaption.monospacedDigit())
+                                    .foregroundStyle(Theme.textSecondary)
+                            }
+                            GeometryReader { geo in
+                                ZStack(alignment: .leading) {
+                                    Capsule().fill(Theme.track)
+                                    Capsule().fill(Theme.accent)
+                                        .frame(width: geo.size.width
+                                               * CGFloat(item.count) / CGFloat(max(1, maxCount)))
+                                }
+                            }
+                            .frame(height: 5)
+                        }
+                    }
+                }
+                .card()
+            }
+        }
+    }
+
+    private var personalBestsCard: some View {
+        let top = Array(sessionStore.exerciseTotals().prefix(3))
+        return Group {
+            if !top.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    Overline("Personal bests")
+                    ForEach(top, id: \.exercise.id) { item in
+                        HStack {
+                            Image(systemName: item.exercise.category.symbol)
+                                .foregroundStyle(Theme.accent)
+                                .frame(width: 30)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(item.exercise.name)
+                                    .font(.body(15, .medium))
+                                    .foregroundStyle(Theme.textPrimary)
+                                Text("\(item.count) session\(item.count == 1 ? "" : "s")")
+                                    .font(.appCaption2)
+                                    .foregroundStyle(Theme.textTertiary)
+                            }
+                            Spacer()
+                            if let best = item.bestForm {
+                                Text("Best form \(Int(best * 100))%")
+                                    .font(.body(12, .bold).monospacedDigit())
+                                    .foregroundStyle(best > 0.6 ? Theme.success : Theme.warning)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+                .card()
+            }
+        }
     }
 
     private var chartCard: some View {

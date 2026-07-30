@@ -234,11 +234,21 @@ struct SessionView: View {
     /// Anchor for the intro demo's auto-start countdown.
     @State private var introStartedAt = Date()
 
-    init(exercise: Exercise, settings: SettingsData) {
+    /// Set when this session is one stop in a routine ("2 of 5").
+    private let routinePosition: (index: Int, total: Int)?
+    /// Non-nil while the routine has more stretches: the summary's primary
+    /// button records this session and advances instead of dismissing.
+    private let onAdvance: (() -> Void)?
+
+    init(exercise: Exercise, settings: SettingsData,
+         routinePosition: (index: Int, total: Int)? = nil,
+         onAdvance: (() -> Void)? = nil) {
         _model = StateObject(wrappedValue: SessionViewModel(
             exercise: exercise,
             settings: settings,
             cameraAvailable: true))
+        self.routinePosition = routinePosition
+        self.onAdvance = onAdvance
     }
 
     var body: some View {
@@ -492,17 +502,31 @@ struct SessionView: View {
 
             Spacer()
 
-            Button("Done") {
-                sessionStore.add(model.makeRecord())
-                // You just stretched — restart the interval clock from now.
-                Task { await scheduler.reschedule(settings: settings.data) }
-                dismiss()
+            Button(onAdvance != nil ? "Next stretch" : "Done") {
+                finishAndRecord()
+                if let onAdvance { onAdvance() } else { dismiss() }
             }
             .buttonStyle(PrimaryButtonStyle())
             .accessibilityIdentifier("session.done")
             .padding(.horizontal, 40)
-            .padding(.bottom, 30)
+            .padding(.bottom, onAdvance != nil ? 12 : 30)
+
+            if onAdvance != nil {
+                Button("Finish here") {
+                    finishAndRecord()
+                    dismiss()
+                }
+                .font(.appSubheadline)
+                .foregroundStyle(Theme.textSecondary)
+                .padding(.bottom, 24)
+            }
         }
+    }
+
+    /// Save this stretch and restart the reminder clock from now.
+    private func finishAndRecord() {
+        sessionStore.add(model.makeRecord())
+        Task { await scheduler.reschedule(settings: settings.data) }
     }
 
     private var summaryHairline: some View {
@@ -531,6 +555,14 @@ struct SessionView: View {
                 Text(model.exercise.name)
                     .font(.appHeadline)
                     .foregroundStyle(Theme.textPrimary)
+            }
+            if let pos = routinePosition {
+                Text("\(pos.index) of \(pos.total)")
+                    .font(.appCaption)
+                    .foregroundStyle(Theme.textSecondary)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 4)
+                    .background(.ultraThinMaterial, in: Capsule())
             }
             Spacer()
             Button {

@@ -11,6 +11,7 @@ struct HomeView: View {
     @EnvironmentObject private var scheduler: ReminderScheduler
 
     @Binding var activeExercise: Exercise?
+    @Binding var activeRoutine: Routine?
 
     var body: some View {
         ScrollView {
@@ -25,6 +26,8 @@ struct HomeView: View {
                 todayStrip
                     .padding(.top, 28)
                 upNextRow
+                    .padding(.top, 28)
+                routinesSection
                     .padding(.top, 28)
             }
             .padding(.horizontal, 22)
@@ -51,6 +54,14 @@ struct HomeView: View {
                     Text("\(sessionStore.streakDays) day\(sessionStore.streakDays == 1 ? "" : "s")")
                         .font(.body(13, .semibold))
                         .foregroundStyle(Theme.textPrimary)
+                    if sessionStore.streakShields > 0 {
+                        Image(systemName: "shield.fill")
+                            .font(.appCaption2)
+                            .foregroundStyle(Theme.accent)
+                        Text("\(sessionStore.streakShields)")
+                            .font(.body(13, .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
@@ -134,7 +145,7 @@ struct HomeView: View {
 
     private var stretchNowButton: some View {
         Button {
-            activeExercise = settings.suggestedExercise()
+            activeExercise = settings.suggestedExercise(history: sessionStore.records)
         } label: {
             Text("Stretch now")
         }
@@ -179,7 +190,7 @@ struct HomeView: View {
     // MARK: Up next — one clean row
 
     private var upNextRow: some View {
-        let exercise = settings.suggestedExercise()
+        let exercise = settings.suggestedExercise(history: sessionStore.records)
         return VStack(alignment: .leading, spacing: 12) {
             Overline("Up next")
             Button {
@@ -206,6 +217,52 @@ struct HomeView: View {
             .buttonStyle(.plain)
             .card(padding: 0)
         }
+    }
+
+    // MARK: Routines — curated multi-stretch breaks
+
+    private var routinesSection: some View {
+        // Hide a routine when the user's filters leave fewer than 2 stretches.
+        let visible = Routine.library.filter { settings.eligibleExercises(in: $0).count >= 2 }
+        return VStack(alignment: .leading, spacing: 12) {
+            if !visible.isEmpty {
+                Overline("Routines")
+                ForEach(visible) { routine in
+                    routineRow(routine)
+                }
+            }
+        }
+    }
+
+    private func routineRow(_ routine: Routine) -> some View {
+        let count = settings.eligibleExercises(in: routine).count
+        let minutes = max(1, Int((Double(count * settings.data.sessionSeconds) / 60).rounded()))
+        return Button {
+            activeRoutine = routine
+        } label: {
+            HStack(spacing: 16) {
+                Image(systemName: routine.symbol)
+                    .font(.body(20, .semibold))
+                    .foregroundStyle(Theme.accent)
+                    .frame(width: 44)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(routine.name)
+                        .font(.appHeadline)
+                        .foregroundStyle(Theme.textPrimary)
+                    Text("\(count) stretches · ~\(minutes) min · \(routine.benefit)")
+                        .font(.appFootnote)
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineLimit(2)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.body(13, .semibold))
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .padding(16)
+        }
+        .buttonStyle(.plain)
+        .card(padding: 0)
     }
 
     // MARK: Helpers
