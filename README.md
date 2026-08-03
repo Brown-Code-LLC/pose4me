@@ -1,4 +1,4 @@
-# Pose4Me 🧘 — stretch reminders with a camera coach
+# Pose4Me App 🧘 — stretch reminders with a camera coach
 
 An iOS app that fights sedentary damage. Every hour (or whatever rhythm you pick) it
 nudges you to take a 30–120 second stretch. The front camera opens, an **animated guide
