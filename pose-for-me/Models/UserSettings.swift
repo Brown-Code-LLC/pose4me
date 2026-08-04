@@ -16,6 +16,7 @@ struct SettingsData: Codable, Equatable {
     var activeWeekdays: Set<Int> = [2, 3, 4, 5, 6] // Calendar weekday numbers (1 = Sunday)
     var snoozeMinutes: Int = 10
     var remindersEnabled: Bool = true
+    var weeklyRecapEnabled: Bool = true         // Sunday-evening recap notification
 
     // Sessions
     var sessionSeconds: Int = 60                 // 30 / 60 / 90 / custom
@@ -53,6 +54,7 @@ struct SettingsData: Codable, Equatable {
         activeWeekdays = try c.decodeIfPresent(Set<Int>.self, forKey: .activeWeekdays) ?? d.activeWeekdays
         snoozeMinutes = try c.decodeIfPresent(Int.self, forKey: .snoozeMinutes) ?? d.snoozeMinutes
         remindersEnabled = try c.decodeIfPresent(Bool.self, forKey: .remindersEnabled) ?? d.remindersEnabled
+        weeklyRecapEnabled = try c.decodeIfPresent(Bool.self, forKey: .weeklyRecapEnabled) ?? d.weeklyRecapEnabled
         sessionSeconds = try c.decodeIfPresent(Int.self, forKey: .sessionSeconds) ?? d.sessionSeconds
         previewSeconds = try c.decodeIfPresent(Int.self, forKey: .previewSeconds) ?? d.previewSeconds
         cameraTrackingEnabled = try c.decodeIfPresent(Bool.self, forKey: .cameraTrackingEnabled) ?? d.cameraTrackingEnabled

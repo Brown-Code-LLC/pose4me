@@ -6,6 +6,8 @@ struct SettingsView: View {
     @EnvironmentObject private var settings: UserSettings
     @EnvironmentObject private var scheduler: ReminderScheduler
     @EnvironmentObject private var tipJar: TipJar
+    @EnvironmentObject private var sessionStore: SessionStore
+    @EnvironmentObject private var cloudBackup: CloudBackup
     @Binding var showTipJar: Bool
 
     private let weekdaySymbols = Calendar.current.veryShortWeekdaySymbols // Sun-first
@@ -22,6 +24,7 @@ struct SettingsView: View {
                 sessionCard
                 trackingCard
                 feelCard
+                backupCard
                 aboutCard
             }
             .padding(.horizontal, 18)
@@ -113,6 +116,12 @@ struct SettingsView: View {
                     settingLabel("Snooze: \(settings.data.snoozeMinutes) min", detail: nil)
                 }
             }
+
+            Toggle(isOn: $settings.data.weeklyRecapEnabled) {
+                settingLabel("Weekly recap",
+                             detail: "A Sunday-evening summary of your week, with a shareable card")
+            }
+            .tint(Theme.accent)
         }
         .card()
     }
@@ -251,6 +260,44 @@ struct SettingsView: View {
             .tint(Theme.accent)
         }
         .card()
+    }
+
+    private var backupCard: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            sectionHeader("Data", symbol: "icloud.fill")
+
+            HStack {
+                settingLabel("iCloud backup", detail: backupDetail)
+                Spacer()
+                if cloudBackup.status == .syncing {
+                    ProgressView()
+                }
+            }
+
+            Button {
+                cloudBackup.sync(store: sessionStore)
+            } label: {
+                Label("Back up now", systemImage: "arrow.triangle.2.circlepath")
+            }
+            .buttonStyle(SecondaryButtonStyle())
+            .disabled(cloudBackup.status == .syncing)
+        }
+        .card()
+    }
+
+    private var backupDetail: String {
+        switch cloudBackup.status {
+        case .idle:
+            "History and streaks back up to your private iCloud automatically."
+        case .syncing:
+            "Syncing…"
+        case .upToDate(let date):
+            "Backed up \(date.formatted(date: .abbreviated, time: .shortened))"
+        case .unavailable:
+            "Sign in to iCloud to protect your streak and history."
+        case .failed(let message):
+            "Backup failed: \(message)"
+        }
     }
 
     private var aboutCard: some View {

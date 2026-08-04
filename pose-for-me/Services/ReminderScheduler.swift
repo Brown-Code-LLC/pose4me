@@ -10,6 +10,7 @@ final class ReminderScheduler: NSObject, ObservableObject {
     static let categoryID = "POSE4ME_STRETCH"
     static let startActionID = "START_STRETCH"
     static let snoozeActionID = "SNOOZE_STRETCH"
+    static let recapID = "pose4me.recap"
 
     @Published private(set) var authorizationGranted = false
     @Published private(set) var authorizationStatus: UNAuthorizationStatus = .notDetermined
@@ -24,6 +25,10 @@ final class ReminderScheduler: NSObject, ObservableObject {
     /// Set when the user opens the app from a stretch notification; RootView observes
     /// this and launches a session.
     @Published var pendingSessionRequest = false
+
+    /// Set when the user taps the Sunday recap notification; RootView observes
+    /// this and switches to the Progress tab.
+    @Published var pendingRecapRequest = false
 
     /// Cached from the last reschedule so the notification snooze action can honor it.
     private var snoozeMinutes = 10
@@ -79,6 +84,7 @@ final class ReminderScheduler: NSObject, ObservableObject {
     func refresh(settings: SettingsData) async {
         await syncAuthorizationStatus()
         snoozeMinutes = settings.snoozeMinutes
+        await scheduleWeeklyRecap(enabled: settings.weeklyRecapEnabled)
         guard settings.remindersEnabled else {
             nextFireDate = nil
             return
@@ -91,7 +97,10 @@ final class ReminderScheduler: NSObject, ObservableObject {
 
         if authorizationGranted {
             let pending = await UNUserNotificationCenter.current().pendingNotificationRequests()
+            // Only the reminder chain counts: the repeating Sunday recap is also a
+            // calendar trigger and must not masquerade as the next stretch time.
             let next = pending
+                .filter { $0.identifier.hasPrefix("pose4me.reminder") }
                 .compactMap { ($0.trigger as? UNCalendarNotificationTrigger)?.nextTriggerDate() }
                 .filter { $0 > Date() }
                 .min()
@@ -123,6 +132,8 @@ final class ReminderScheduler: NSObject, ObservableObject {
         center.removeAllPendingNotificationRequests()
         nextFireDate = nil
         snoozeMinutes = settings.snoozeMinutes
+        // removeAll above also cleared the recap; put it back.
+        await scheduleWeeklyRecap(enabled: settings.weeklyRecapEnabled)
         guard settings.remindersEnabled else { return }
 
         let slots = upcomingSlots(settings: settings, count: 24)
@@ -149,6 +160,27 @@ final class ReminderScheduler: NSObject, ObservableObject {
             try? await center.add(request)
         }
         nextFireDate = slots.first
+    }
+
+    /// (Re)schedules the repeating Sunday-evening recap. Re-adding the same
+    /// identifier replaces the pending request, so calling this often is safe.
+    func scheduleWeeklyRecap(enabled: Bool) async {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [Self.recapID])
+        guard enabled, authorizationGranted else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "Your week in stretches"
+        content.body = "Minutes, streak and top focus area — see your recap and share the card."
+        content.sound = .default
+
+        var comps = DateComponents()
+        comps.weekday = 1 // Sunday
+        comps.hour = 18
+        let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
+        let request = UNNotificationRequest(identifier: Self.recapID,
+                                            content: content, trigger: trigger)
+        try? await center.add(request)
     }
 
     func snooze(minutes: Int) async {
@@ -247,13 +279,19 @@ extension ReminderScheduler: UNUserNotificationCenterDelegate {
         didReceive response: UNNotificationResponse
     ) async {
         let action = response.actionIdentifier
+        let notificationID = response.notification.request.identifier
         await MainActor.run {
             switch action {
             case Self.snoozeActionID:
                 break // handled below, needs settings-free default
             default:
-                // Default tap or explicit "Start stretch" both open a session.
-                self.pendingSessionRequest = true
+                if notificationID == Self.recapID {
+                    // Recap tap lands on the Progress tab, not in a session.
+                    self.pendingRecapRequest = true
+                } else {
+                    // Default tap or explicit "Start stretch" both open a session.
+                    self.pendingSessionRequest = true
+                }
             }
         }
         if action == Self.snoozeActionID {

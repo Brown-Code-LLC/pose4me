@@ -6,6 +6,8 @@ struct RootView: View {
     @EnvironmentObject private var settings: UserSettings
     @EnvironmentObject private var scheduler: ReminderScheduler
     @EnvironmentObject private var sessionStore: SessionStore
+    @EnvironmentObject private var cloudBackup: CloudBackup
+    @ObservedObject private var launcher = SessionLauncher.shared
 
     @State private var tab: Tab = .home
     @State private var activeExercise: Exercise?
@@ -50,7 +52,21 @@ struct RootView: View {
             // SessionView's Done button; merely closing the sheet must not.
             if dismissed {
                 Task { await scheduler.refresh(settings: settings.data) }
+                // Freshly recorded sessions ride up to iCloud right away.
+                cloudBackup.sync(store: sessionStore)
             }
+        }
+        .onChange(of: launcher.stretchRequested) { _, requested in
+            // Siri / Shortcuts / Action button -> straight into a stretch.
+            guard requested else { return }
+            launcher.stretchRequested = false
+            activeExercise = settings.suggestedExercise(history: sessionStore.records)
+        }
+        .onChange(of: scheduler.pendingRecapRequest) { _, pending in
+            // Sunday recap tap -> the Progress tab, where the share card lives.
+            guard pending else { return }
+            scheduler.pendingRecapRequest = false
+            tab = .stats
         }
         .onOpenURL { url in
             // Widget/complication tap -> straight into a stretch.
@@ -61,6 +77,12 @@ struct RootView: View {
         .task {
             WatchSyncService.shared.activate()
             sessionStore.publishToWidgets()
+            cloudBackup.sync(store: sessionStore)
+            // Cold start from an intent: the flag may be set before onChange exists.
+            if launcher.stretchRequested {
+                launcher.stretchRequested = false
+                activeExercise = settings.suggestedExercise(history: sessionStore.records)
+            }
             await scheduler.refresh(settings: settings.data)
             #if DEBUG
             // UI-testing hooks: `-pose4me.autostart <id>` opens a session on launch,

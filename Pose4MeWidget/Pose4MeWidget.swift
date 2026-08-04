@@ -203,5 +203,6 @@ struct StretchCountdownWidget: Widget {
 struct Pose4MeWidgetBundle: WidgetBundle {
     var body: some Widget {
         StretchCountdownWidget()
+        StartStretchControl()
     }
 }

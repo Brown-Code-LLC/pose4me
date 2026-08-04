@@ -16,6 +16,8 @@ struct StatsView: View {
 
                 statRow
 
+                WeeklyRecapSection()
+
                 shieldRow
 
                 chartCard

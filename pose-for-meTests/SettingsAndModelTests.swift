@@ -272,6 +272,82 @@ final class SettingsAndModelTests: XCTestCase {
         XCTAssertNil(exercises.last?.bestForm, "timer-only exercise has no form score")
     }
 
+    // MARK: Cloud merge
+
+    @MainActor
+    func testMergeUnionsByIDAndStaysChronological() {
+        let early = SessionRecord(exerciseID: "overhead-reach",
+                                  date: Date(timeIntervalSinceNow: -7200),
+                                  durationSeconds: 60, averageMatchScore: nil)
+        let late = SessionRecord(exerciseID: "neck-side-stretch",
+                                 date: Date(timeIntervalSinceNow: -600),
+                                 durationSeconds: 30, averageMatchScore: nil)
+        let remoteOnly = SessionRecord(exerciseID: "torso-twist",
+                                       date: Date(timeIntervalSinceNow: -3600),
+                                       durationSeconds: 45, averageMatchScore: 0.8)
+        let store = SessionStore(testRecords: [early, late])
+
+        // Remote holds one duplicate and one new record.
+        XCTAssertTrue(store.merge(remote: [early, remoteOnly]))
+        XCTAssertEqual(store.records.count, 3, "duplicate must not be re-added")
+        XCTAssertEqual(store.records.map(\.exerciseID),
+                       ["overhead-reach", "torso-twist", "neck-side-stretch"],
+                       "merged history must stay date-ordered")
+
+        // Merging the same remote again changes nothing.
+        XCTAssertFalse(store.merge(remote: [early, remoteOnly]))
+        XCTAssertEqual(store.records.count, 3)
+    }
+
+    @MainActor
+    func testMergeWithEmptyRemoteIsANoOp() {
+        let record = SessionRecord(exerciseID: "overhead-reach", date: Date(),
+                                   durationSeconds: 60, averageMatchScore: nil)
+        let store = SessionStore(testRecords: [record])
+        XCTAssertFalse(store.merge(remote: []))
+        XCTAssertEqual(store.records.count, 1)
+    }
+
+    // MARK: Weekly summary
+
+    @MainActor
+    func testWeeklySummaryAggregatesTrailingSevenDays() {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        func record(daysAgo: Int, id: String, seconds: Double, score: Double?) -> SessionRecord {
+            SessionRecord(exerciseID: id,
+                          date: cal.date(byAdding: .day, value: -daysAgo, to: today)!
+                                .addingTimeInterval(3600 * 9),
+                          durationSeconds: seconds, averageMatchScore: score)
+        }
+        let store = SessionStore(testRecords: [
+            record(daysAgo: 0, id: "overhead-reach", seconds: 60, score: 0.7),
+            record(daysAgo: 0, id: "overhead-reach", seconds: 60, score: 0.9),
+            record(daysAgo: 2, id: "neck-side-stretch", seconds: 30, score: nil),
+            record(daysAgo: 8, id: "torso-twist", seconds: 300, score: 0.99), // outside window
+        ])
+        let summary = store.weeklySummary()
+        XCTAssertEqual(summary.sessions, 3, "the 8-day-old session is out of the window")
+        XCTAssertEqual(summary.minutes, 2.5, accuracy: 0.01)
+        XCTAssertEqual(summary.activeDays, 2)
+        XCTAssertEqual(summary.topCategory, .fullBody)
+        XCTAssertEqual(summary.bestForm ?? 0, 0.9, accuracy: 0.001,
+                       "the out-of-window 0.99 must not count")
+        XCTAssertEqual(summary.dayCounts.count, 7)
+        XCTAssertEqual(summary.dayCounts[6], 2, "today is the last bucket")
+        XCTAssertEqual(summary.dayCounts[4], 1)
+    }
+
+    @MainActor
+    func testWeeklySummaryEmptyHistory() {
+        let store = SessionStore(testRecords: [])
+        let summary = store.weeklySummary()
+        XCTAssertEqual(summary.sessions, 0)
+        XCTAssertNil(summary.topCategory)
+        XCTAssertNil(summary.bestForm)
+        XCTAssertEqual(summary.dayCounts, Array(repeating: 0, count: 7))
+    }
+
     @MainActor
     func testDailyCountsShapeAndTotals() {
         let store = SessionStore(testRecords: [

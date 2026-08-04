@@ -12,6 +12,17 @@ struct SessionRecord: Codable, Identifiable, Sendable {
     var exercise: Exercise? { Exercise.byID(exerciseID) }
 }
 
+/// Aggregate of the trailing 7 days, for the weekly recap card and share image.
+struct WeeklySummary: Equatable {
+    var sessions = 0
+    var minutes = 0.0
+    var activeDays = 0
+    var topCategory: ExerciseCategory?
+    var bestForm: Double?
+    /// Sessions per day, oldest first (index 6 = today).
+    var dayCounts: [Int] = Array(repeating: 0, count: 7)
+}
+
 /// History + streak bookkeeping, persisted as JSON in Application Support.
 @MainActor
 final class SessionStore: ObservableObject {
@@ -48,6 +59,19 @@ final class SessionStore: ObservableObject {
         records.append(record)
         save()
         publishToWidgets()
+    }
+
+    /// Union remote backup records into local history (dedup by id, kept
+    /// chronological). Returns true when anything new arrived from iCloud.
+    @discardableResult
+    func merge(remote: [SessionRecord]) -> Bool {
+        let known = Set(records.map(\.id))
+        let fresh = remote.filter { !known.contains($0.id) }
+        guard !fresh.isEmpty else { return false }
+        records = (records + fresh).sorted { $0.date < $1.date }
+        save()
+        publishToWidgets()
+        return true
     }
 
     /// Mirrors streak/today stats to the widget and watch surfaces.
@@ -117,6 +141,35 @@ final class SessionStore: ObservableObject {
             cursor = previous
         }
         return (streak, shields)
+    }
+
+    /// The trailing 7 days rolled up for the weekly recap.
+    func weeklySummary(now: Date = Date()) -> WeeklySummary {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: now)
+        guard let windowStart = calendar.date(byAdding: .day, value: -6, to: today) else {
+            return WeeklySummary()
+        }
+        let week = records.filter { $0.date >= windowStart }
+        var summary = WeeklySummary()
+        summary.sessions = week.count
+        summary.minutes = week.reduce(0) { $0 + $1.durationSeconds } / 60
+
+        var byCategory: [ExerciseCategory: Int] = [:]
+        for record in week {
+            let day = calendar.startOfDay(for: record.date)
+            let offset = calendar.dateComponents([.day], from: windowStart, to: day).day ?? 0
+            if (0..<7).contains(offset) { summary.dayCounts[offset] += 1 }
+            if let category = record.exercise?.category { byCategory[category, default: 0] += 1 }
+            if let score = record.averageMatchScore {
+                summary.bestForm = max(summary.bestForm ?? 0, score)
+            }
+        }
+        summary.activeDays = summary.dayCounts.filter { $0 > 0 }.count
+        summary.topCategory = byCategory
+            .sorted { $0.value == $1.value ? $0.key.rawValue < $1.key.rawValue : $0.value > $1.value }
+            .first?.key
+        return summary
     }
 
     /// Lifetime sessions and minutes per category, most-stretched first.

@@ -14,6 +14,7 @@ struct pose_for_meApp: App {
     @StateObject private var sessionStore = SessionStore()
     @StateObject private var scheduler = ReminderScheduler()
     @StateObject private var tipJar = TipJar()
+    @StateObject private var cloudBackup = CloudBackup()
 
     @Environment(\.scenePhase) private var scenePhase
 
@@ -29,12 +30,14 @@ struct pose_for_meApp: App {
                 .environmentObject(sessionStore)
                 .environmentObject(scheduler)
                 .environmentObject(tipJar)
+                .environmentObject(cloudBackup)
         }
         .onChange(of: scenePhase) { _, phase in
             // Non-destructive sync: tops up an exhausted chain but never resets a
             // running countdown just because the app was backgrounded.
             if phase == .background, settings.data.hasOnboarded {
                 Task { await scheduler.refresh(settings: settings.data) }
+                cloudBackup.sync(store: sessionStore)
             }
         }
     }
